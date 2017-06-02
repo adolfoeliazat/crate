@@ -16,6 +16,7 @@ Contents
 
    architecture/index
    release_notes/index
+   getting_started/index
    installation
    configuration
    cli
