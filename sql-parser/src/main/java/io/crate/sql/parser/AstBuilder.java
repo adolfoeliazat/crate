@@ -131,6 +131,24 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitGrantPrivilege(SqlBaseParser.GrantPrivilegeContext context) {
+        List<String> usernames = identsToStrings(context.ident());
+        return new GrantPrivilege(
+            usernames,
+            context.ALL() != null,
+            visit(context.privilege(), Privilege.class));
+    }
+
+    @Override
+    public Node visitRevokePrivilege(SqlBaseParser.RevokePrivilegeContext context) {
+        List<String> usernames = identsToStrings(context.ident());
+        return new RevokePrivilege(
+            usernames,
+            context.ALL() != null,
+            visit(context.privilege(), Privilege.class));
+    }
+
+    @Override
     public Node visitCharFilters(SqlBaseParser.CharFiltersContext context) {
         return new CharFilters(visit(context.namedProperties(), NamedProperties.class));
     }
@@ -446,6 +464,21 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
         return new FunctionArgument(getIdentTextIfPresent(context.ident()), (ColumnType) visit(context.dataType()));
     }
 
+    @Override
+    public Node visitPrivilege(SqlBaseParser.PrivilegeContext context) {
+        if (context.DML() != null){
+            return new Privilege(Privilege.PrivilegeType.DML);
+        }
+        if (context.DQL() != null){
+            return new Privilege(Privilege.PrivilegeType.DQL);
+        }
+
+        if (context.DDL() !=null){
+            return new Privilege(Privilege.PrivilegeType.DDL);
+        }
+        return null;
+    }
+
     // Properties
 
     @Override
@@ -696,6 +729,11 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
 
     private String getIdentText(SqlBaseParser.IdentContext ident) {
         StringLiteral literal = (StringLiteral) visit(ident);
+        return literal.getValue();
+    }
+
+    private String getPrivilege(SqlBaseParser.PrivilegeContext privilege) {
+        StringLiteral literal = (StringLiteral) visit(privilege);
         return literal.getValue();
     }
 

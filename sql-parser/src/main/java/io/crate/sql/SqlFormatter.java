@@ -340,6 +340,54 @@ public final class SqlFormatter {
         }
 
         @Override
+        public Void visitGrantPrivilege(GrantPrivilege node, Integer indent) {
+            builder.append("GRANT ");
+
+            List<Privilege> privileges = node.privileges();
+            for (int i = 0; i < privileges.size(); i++) {
+                builder.append(privileges.get(i).type().toString());
+                if (i < privileges.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+
+            builder.append(" TO ");
+
+            List<String> userNames = node.userNames();
+            for (int i = 0; i < userNames.size(); i++) {
+                builder.append(quoteIdentifierIfNeeded(userNames.get(i)));
+                if (i < userNames.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public Void visitRevokePrivilege(RevokePrivilege node, Integer indent) {
+            builder.append("REVOKE ");
+
+            List<Privilege> privileges = node.privileges();
+            for (int i = 0; i < privileges.size(); i++) {
+                builder.append(privileges.get(i).type().toString());
+                if (i < privileges.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+
+            builder.append(" FROM ");
+
+            List<String> userNames = node.userNames();
+            for (int i = 0; i < userNames.size(); i++) {
+                builder.append(quoteIdentifierIfNeeded(userNames.get(i)));
+                if (i < userNames.size() - 1) {
+                    builder.append(", ");
+                }
+            }
+            return null;
+        }
+
+        @Override
         public Void visitDropUser(DropUser node, Integer indent) {
             builder.append("DROP USER ");
             if (node.ifExists()) {

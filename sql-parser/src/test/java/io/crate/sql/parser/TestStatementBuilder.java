@@ -381,6 +381,22 @@ public class TestStatementBuilder {
     }
 
     @Test
+    public void testGrantPrivilegeStmtBuilder() {
+        printStatement("grant DML To \"Günter\"");
+        printStatement("grant DQL, DDL to root");
+        printStatement("grant ALL PRIVILEGES to wolfie");
+        printStatement("grant ALL PRIVILEGES to wolfie, anna");
+    }
+
+    @Test
+    public void testRevokePrivilegeStmtBuilder() {
+        printStatement("revoke DML from \"Günter\"");
+        printStatement("revoke DQL, DDL from root");
+        printStatement("revoke ALL PRIVILEGES from wolfie");
+        printStatement("revoke ALL PRIVILEGES from wolfie, anna, herald");
+    }
+
+    @Test
     public void testCreateFunctionStmtBuilder() {
         printStatement("create function foo.bar() returns boolean language ? as ?");
         printStatement("create function foo.bar() returns boolean language $1 as $2");
@@ -1039,7 +1055,9 @@ public class TestStatementBuilder {
             statement instanceof CopyFrom ||
             statement instanceof CreateFunction ||
             statement instanceof CreateUser ||
-            statement instanceof DropUser) {
+            statement instanceof DropUser ||
+            statement instanceof GrantPrivilege ||
+            statement instanceof RevokePrivilege) {
             println(SqlFormatter.formatSql(statement));
             println("");
             assertFormattedSql(statement);

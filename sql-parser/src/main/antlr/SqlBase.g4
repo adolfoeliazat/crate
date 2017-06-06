@@ -71,6 +71,10 @@ statement
     | DROP FUNCTION (IF EXISTS)? name=qname
         '(' (functionArgument (',' functionArgument)*)? ')'                          #dropFunction
     | DROP USER (IF EXISTS)? name=ident                                              #dropUser
+    | GRANT (privilege (',' privilege)* | ALL (PRIVILEGES)?)
+     TO (ident (',' ident)* )                                                        #grantPrivilege
+    | REVOKE (privilege (',' privilege)* | ALL (PRIVILEGES)?)
+     FROM (ident (',' ident)* )                                                      #revokePrivilege
     | createStmt                                                                     #create
     ;
 
@@ -386,6 +390,12 @@ columns
     : '(' primaryExpression (',' primaryExpression)* ')'
     ;
 
+privilege
+    : DQL
+    | DML
+    | DDL
+    ;
+
 assignment
     : primaryExpression EQ expr
     ;
@@ -539,6 +549,10 @@ tableWithPartitions
     : tableWithPartition (',' tableWithPartition)*
     ;
 
+tableOrSchemaNames
+    : qname (',' qname)*
+    ;
+
 setGlobalAssignment
     : name=primaryExpression (EQ | TO) value=expr
     ;
@@ -565,7 +579,7 @@ nonReserved
     | SHARDS | SHOW | STRICT | SYSTEM | TABLES | TABLESAMPLE | TEXT | TIME
     | TIMESTAMP | TO | TOKENIZER | TOKEN_FILTERS | TYPE | VALUES | VIEW | YEAR
     | REPOSITORY | SNAPSHOT | RESTORE | GENERATED | ALWAYS | BEGIN
-    | ISOLATION | TRANSACTION | LEVEL | LANGUAGE | OPEN | CLOSE | RENAME | USER
+    | ISOLATION | TRANSACTION | LEVEL | LANGUAGE | OPEN | CLOSE | RENAME | USER | PRIVILEGES
     ;
 
 SELECT: 'SELECT';
@@ -765,6 +779,12 @@ ALWAYS: 'ALWAYS';
 READ: 'READ';
 
 USER: 'USER';
+GRANT: 'GRANT';
+REVOKE: 'REVOKE';
+DML: 'DML';
+DQL: 'DQL';
+DDL: 'DDL';
+PRIVILEGES: 'PRIVILEGES';
 
 
 EQ  : '=';
