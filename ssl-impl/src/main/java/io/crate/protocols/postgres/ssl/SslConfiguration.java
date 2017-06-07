@@ -40,11 +40,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class SslService {
+class SslConfiguration {
 
     private io.netty.handler.ssl.SslContext nettySslContext;
 
-    public SslService(Settings settings) throws Exception {
+    SslConfiguration(Settings settings) throws Exception {
         TrustStoreSettings trustStoreSettings = loadTrustStore(settings);
         KeyStoreSettings keyStoreSettings = loadKeyStore(settings);
         String keyStorePassword = keyStoreSettings.keyStorePassword;
@@ -85,7 +85,7 @@ public class SslService {
                                                 SslProvider.JDK);
     }
 
-    public SslContext getNettySslContext() {
+    SslContext getNettySslContext() {
         return nettySslContext;
     }
 

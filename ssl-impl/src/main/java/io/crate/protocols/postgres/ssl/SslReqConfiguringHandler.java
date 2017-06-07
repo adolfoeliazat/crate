@@ -70,8 +70,8 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     SslHandler buildSSLHandler(ChannelPipeline pipeline)
             throws Exception
     {
-        SslService sslService = new SslService(settings);
-        SslContext nettySslContext = sslService.getNettySslContext();
+        SslConfiguration sslConfiguration = new SslConfiguration(settings);
+        SslContext nettySslContext = sslConfiguration.getNettySslContext();
         return nettySslContext.newHandler(pipeline.channel().alloc());
     }
 
