@@ -21,23 +21,21 @@ package io.crate.protocols.postgres.ssl;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.handler.ssl.SslHandler;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
-
-import javax.net.ssl.SSLException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 
 /**
  * Handler which configures SSL when it receives an SSLRequest.
  */
-public class SslConfiguringHandler implements SslReqHandler {
+public class SslReqConfiguringHandler implements SslReqHandler {
 
+    private final Logger LOGGER;
     private final Settings settings;
 
-    public SslConfiguringHandler(Settings settings) {
+    public SslReqConfiguringHandler(Settings settings) {
+        this.LOGGER = Loggers.getLogger(SslReqRejectingHandler.class, settings);
         this.settings = settings;
         LOGGER.debug("SSL support is enabled.");
     }
@@ -57,8 +55,8 @@ public class SslConfiguringHandler implements SslReqHandler {
             try {
                 // add the ssl handler which must come first
                 pipeline.addFirst(buildSSLHandler(pipeline));
-            } catch (NoSuchAlgorithmException | SSLException | CertificateException e) {
-                throw new RuntimeException("Couldn't setup SSL.", e);
+            } catch (Exception e) {
+                throw new SslConfigurationException("Couldn't setup SSL.", e);
             }
         } else {
             buffer.resetReaderIndex();
@@ -69,18 +67,12 @@ public class SslConfiguringHandler implements SslReqHandler {
     /**
      * Constructs the Netty SslHandler which should be added as the first element of the pipeline.
      */
-    private io.netty.handler.ssl.SslHandler buildSSLHandler(ChannelPipeline pipeline)
-        throws NoSuchAlgorithmException, SSLException, CertificateException {
-        SelfSignedCertificate ssc = new SelfSignedCertificate();
-        SslContext sslContext =
-            SslContextBuilder
-                // TODO Replace this with correct certificate and private key
-                .forServer(ssc.certificate(), ssc.privateKey())
-                // TODO Replace this with TrustManager which verifies keys
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .startTls(false)
-                .build();
-        return sslContext.newHandler(pipeline.channel().alloc());
+    SslHandler buildSSLHandler(ChannelPipeline pipeline)
+            throws Exception
+    {
+        SslService sslService = new SslService(settings);
+        SslContext nettySslContext = sslService.getNettySslContext();
+        return nettySslContext.newHandler(pipeline.channel().alloc());
     }
 
 }

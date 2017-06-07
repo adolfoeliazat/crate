@@ -29,11 +29,11 @@ import org.elasticsearch.common.settings.Settings;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
-public class SslReqHandlerProvider implements Supplier<SslReqHandler> {
+public class SslReqHandlerSupplier implements Supplier<SslReqHandler> {
 
     private final SslReqHandler sslReqHandler;
 
-    public SslReqHandlerProvider(Settings settings) {
+    public SslReqHandlerSupplier(Settings settings) {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
             ClassLoader classLoader = getClass().getClassLoader();
             try {
@@ -46,7 +46,7 @@ public class SslReqHandlerProvider implements Supplier<SslReqHandler> {
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
         } else {
-            this.sslReqHandler = new SslReqRejectingHandler();
+            this.sslReqHandler = new SslReqRejectingHandler(settings);
         }
     }
 
