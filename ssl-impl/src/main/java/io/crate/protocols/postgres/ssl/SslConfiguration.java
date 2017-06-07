@@ -30,87 +30,90 @@ import org.elasticsearch.common.settings.Settings;
 import javax.net.ssl.*;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
 
+final class SslConfiguration {
 
-class SslConfiguration {
+    static io.netty.handler.ssl.SslContext buildSslContext(Settings settings) {
+        try {
+            TrustStoreSettings trustStoreSettings = loadTrustStore(settings);
+            KeyStoreSettings keyStoreSettings = loadKeyStore(settings);
+            String keyStorePassword = keyStoreSettings.keyStorePassword;
+            String keyStoreKeyPassword = keyStoreSettings.keyStoreKeyPassword;
 
-    private io.netty.handler.ssl.SslContext nettySslContext;
+            // initialize a trust manager factory with the trusted store
+            KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyFactory.init(
+                keyStoreSettings.keyStore,
+                keyStoreKeyPassword == null || keyStoreKeyPassword.isEmpty() ?
+                null :
+                keyStoreKeyPassword.toCharArray());
 
-    SslConfiguration(Settings settings) throws Exception {
-        TrustStoreSettings trustStoreSettings = loadTrustStore(settings);
-        KeyStoreSettings keyStoreSettings = loadKeyStore(settings);
-        String keyStorePassword = keyStoreSettings.keyStorePassword;
-        String keyStoreKeyPassword = keyStoreSettings.keyStoreKeyPassword;
+            // get the trust managers from the factory
+            KeyManager[] keyManagers = keyFactory.getKeyManagers();
 
-        // initialize a trust manager factory with the trusted store
-        KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        keyFactory.init(
-            keyStoreSettings.keyStore,
-            keyStoreKeyPassword == null || keyStoreKeyPassword.isEmpty() ? null : keyStoreKeyPassword.toCharArray());
+            // initialize an ssl context to use these managers and set as default
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(keyManagers, trustStoreSettings.trustManagers, null);
+            SSLContext.setDefault(sslContext);
+            List<String> supportedCiphers = Arrays.asList(sslContext.createSSLEngine().getSupportedCipherSuites());
 
-        // get the trust managers from the factory
-        KeyManager[] keyManagers = keyFactory.getKeyManagers();
+            final X509Certificate[] keystoreCert =
+                SslCertificateHelper.exportServerCertChain(keyStoreSettings.keyStore);
+            final PrivateKey keystoreKey = SslCertificateHelper.exportDecryptedKey(
+                keyStoreSettings.keyStore,
+                (keyStorePassword == null || keyStorePassword.isEmpty()) ? null : keyStoreKeyPassword.toCharArray());
 
+            if (keystoreKey == null) {
+                throw new Exception("No key found in " + keyStoreSettings.keyStorePath);
+            }
 
-        // initialize an ssl context to use these managers and set as default
-        SSLContext sslContext = SSLContext.getInstance("SSL");
-        sslContext.init(keyManagers, trustStoreSettings.trustManagers, null);
-        SSLContext.setDefault(sslContext);
-        List<String> supportedCiphers = Arrays.asList(sslContext.createSSLEngine().getSupportedCipherSuites());
-
-
-        final X509Certificate[] keystoreCert = SslCertificateHelper.exportServerCertChain(keyStoreSettings.keyStore);
-        final PrivateKey keystoreKey = SslCertificateHelper.exportDecryptedKey(
-            keyStoreSettings.keyStore,
-            (keyStorePassword == null || keyStorePassword.isEmpty()) ? null : keyStoreKeyPassword.toCharArray());
-
-        if (keystoreKey == null) {
-            throw new Exception("No key found in " + keyStoreSettings.keyStorePath);
+            X509Certificate[] trustedCertificates =
+                SslCertificateHelper.exportRootCertificates(trustStoreSettings.trustStore);
+            return buildSSLServerContext(keystoreKey,
+                                         keystoreCert,
+                                         trustedCertificates,
+                                         supportedCiphers,
+                                         SslProvider.JDK);
+        } catch (SslConfigurationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SslConfigurationException("Failed to build SSL configuration", e);
         }
-
-
-        X509Certificate[] trustedCertificates = SslCertificateHelper.exportRootCertificates(trustStoreSettings.trustStore);
-        nettySslContext = buildSSLServerContext(keystoreKey,
-                                                keystoreCert,
-                                                trustedCertificates,
-                                                supportedCiphers,
-                                                SslProvider.JDK);
     }
 
-    SslContext getNettySslContext() {
-        return nettySslContext;
-    }
-
-    private static void checkStorePath(String keystoreFilePath) throws Exception {
+    private static void checkStorePath(String keystoreFilePath, StoreType storeType) throws SslConfigurationException {
 
         if (keystoreFilePath == null || keystoreFilePath.length() == 0) {
-            throw new Exception("Empty file path!");
+            throw new SslConfigurationException("Empty file path for " + storeType + "store.");
         }
 
         Path path = Paths.get(keystoreFilePath);
         if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-            throw new Exception("[" + keystoreFilePath + "] is a directory, expected file!");
+            throw new SslConfigurationException("[" + keystoreFilePath + "] is a directory, expected file for " +
+                                                storeType + "store.");
         }
 
         if (!Files.isReadable(path)) {
-            throw new Exception("Unable to read [" + keystoreFilePath + "] (" + Paths.get(keystoreFilePath) +
-                                ") Please make sure this file exists and has read permissions");
+            throw new SslConfigurationException("Unable to read [" + keystoreFilePath + "] for " + storeType +
+                                "store. Please make sure this file exists and has read permissions.");
         }
     }
 
-    private SslContext buildSSLServerContext(final PrivateKey privateKey,
-                                             final X509Certificate[] cert,
-                                             final X509Certificate[] trustedCerts,
-                                             final Iterable<String> ciphers,
-                                             final SslProvider sslProvider) throws SSLException {
+    private static SslContext buildSSLServerContext(final PrivateKey privateKey,
+                                                    final X509Certificate[] cert,
+                                                    final X509Certificate[] trustedCerts,
+                                                    final Iterable<String> ciphers,
+                                                    final SslProvider sslProvider) throws SSLException {
         final SslContextBuilder sslContextBuilder =
             SslContextBuilder
                 .forServer(privateKey, cert)
@@ -128,7 +131,7 @@ class SslConfiguration {
         return buildSSLContext(sslContextBuilder);
     }
 
-    private SslContext buildSSLContext(final SslContextBuilder sslContextBuilder) throws SSLException {
+    private static SslContext buildSSLContext(final SslContextBuilder sslContextBuilder) throws SSLException {
 
         final SecurityManager sm = System.getSecurityManager();
 
@@ -148,9 +151,12 @@ class SslConfiguration {
     }
 
     @VisibleForTesting
-    static TrustStoreSettings loadTrustStore(Settings settings) throws Exception {
+    static TrustStoreSettings loadTrustStore(Settings settings) throws KeyStoreException,
+                                                                       IOException,
+                                                                       NoSuchAlgorithmException,
+                                                                       CertificateException {
         String trustStorePath = SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.setting().get(settings);
-        checkStorePath(trustStorePath);
+        checkStorePath(trustStorePath, StoreType.trust);
         String trustStorePassword = SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.setting().get(settings);
 
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -183,12 +189,18 @@ class SslConfiguration {
     }
 
     @VisibleForTesting
-    static KeyStoreSettings loadKeyStore(Settings settings) throws Exception {
-        /* Keystore */
+    static KeyStoreSettings loadKeyStore(Settings settings) throws KeyStoreException,
+                                                                   IOException,
+                                                                   NoSuchAlgorithmException,
+                                                                   CertificateException,
+                                                                   UnrecoverableKeyException {
         String keyStorePath = SslConfigSettings.SSL_KEYSTORE_FILEPATH.setting().get(settings);
-        checkStorePath(keyStorePath);
+        checkStorePath(keyStorePath, StoreType.key);
         String keyStorePassword = SslConfigSettings.SSL_KEYSTORE_PASSWORD.setting().get(settings);
         String keyStoreKeyPassword = SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.setting().get(settings);
+        if (keyStoreKeyPassword.isEmpty()) {
+            keyStoreKeyPassword = keyStorePassword;
+        }
 
         // load the store
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -227,5 +239,10 @@ class SslConfiguration {
             this.keyStoreKeyPassword = keyStoreKeyPassword;
             this.keyStorePath = keyStorePath;
         }
+    }
+
+    private enum StoreType {
+        trust,
+        key
     }
 }

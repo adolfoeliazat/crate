@@ -20,11 +20,13 @@ package io.crate.protocols.postgres.ssl;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
+
+import javax.net.ssl.SSLException;
+import java.security.cert.CertificateException;
 
 /**
  * Handler which configures SSL when it receives an SSLRequest.
@@ -34,7 +36,7 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     private final Logger LOGGER;
     private final Settings settings;
 
-    public SslReqConfiguringHandler(Settings settings) {
+    SslReqConfiguringHandler(Settings settings) {
         this.LOGGER = Loggers.getLogger(SslReqRejectingHandler.class, settings);
         this.settings = settings;
         LOGGER.debug("SSL support is enabled.");
@@ -67,12 +69,7 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     /**
      * Constructs the Netty SslHandler which should be added as the first element of the pipeline.
      */
-    SslHandler buildSSLHandler(ChannelPipeline pipeline)
-            throws Exception
-    {
-        SslConfiguration sslConfiguration = new SslConfiguration(settings);
-        SslContext nettySslContext = sslConfiguration.getNettySslContext();
-        return nettySslContext.newHandler(pipeline.channel().alloc());
+    SslHandler buildSSLHandler(ChannelPipeline pipeline) throws SSLException, CertificateException {
+        return SslConfiguration.buildSslContext(settings).newHandler(pipeline.channel().alloc());
     }
-
 }

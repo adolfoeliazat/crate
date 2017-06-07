@@ -23,8 +23,11 @@ package io.crate.protocols.postgres.ssl;
  */
 class SslConfigurationException extends RuntimeException {
 
+    SslConfigurationException(String s) {
+        super(s);
+    }
+
     SslConfigurationException(String s, Exception e) {
         super(s, e);
     }
-
 }

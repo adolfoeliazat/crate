@@ -26,5 +26,4 @@ public class SslReqConfiguringHandlerTest {
     public void testSslReqConfiguringHandler() {
 
     }
-
 }

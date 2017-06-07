@@ -29,17 +29,20 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.elasticsearch.common.settings.Settings;
 
+import javax.net.ssl.SSLException;
+import java.security.cert.CertificateException;
+
 /**
  * SslRequestHandler which uses a simple (and insecure) self-signed certificate.
  */
-public class SelfSignedSslReqHandler extends SslReqConfiguringHandler {
+class SelfSignedSslReqHandler extends SslReqConfiguringHandler {
 
-    public SelfSignedSslReqHandler(Settings settings) {
+    SelfSignedSslReqHandler(Settings settings) {
         super(settings);
     }
 
     @Override
-    SslHandler buildSSLHandler(ChannelPipeline pipeline) throws Exception {
+    SslHandler buildSSLHandler(ChannelPipeline pipeline) throws SSLException, CertificateException {
         SelfSignedCertificate ssc = new SelfSignedCertificate();
         SslContext sslContext =
             SslContextBuilder

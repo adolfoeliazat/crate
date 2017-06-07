@@ -112,6 +112,37 @@ public class SslConfigurationTest extends CrateUnitTest {
         SslConfiguration.loadKeyStore(settingsBuilder.build());
     }
 
+    @Test
+    public void testKeyStoreLoadingNoKeyPassword() {
+        Settings.Builder settingsBuilder = Settings.builder();
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
+                            getAbsoluteFilePathFromClassPath("keystore_no_keypasswd.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
+
+        try {
+            SslConfiguration.KeyStoreSettings keyStoreSettings = SslConfiguration.loadKeyStore(settingsBuilder.build());
+            assertThat(keyStoreSettings.keyManagers.length, is(1));
+            assertThat(keyStoreSettings.keyStore.getType(), is("jks"));
+            assertThat(keyStoreSettings.keyStore.getCertificate("root"), notNullValue());
+        } catch (Exception e) {
+            fail("Failed to load trustore");
+        }
+    }
+
+    @Test
+    public void testKeyStoreLoadingNoKeyPasswordFail() throws Exception {
+        expectedException.expect(UnrecoverableKeyException.class);
+        expectedException.expectMessage("Cannot recover key");
+
+        Settings.Builder settingsBuilder = Settings.builder();
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
+                            getAbsoluteFilePathFromClassPath("keystore_no_keypasswd.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
+
+        SslConfiguration.loadKeyStore(settingsBuilder.build());
+    }
+
     private File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
         File file;
         final URL fileUrl = SslConfigurationTest.class.getClassLoader().getResource(fileNameFromClasspath);
