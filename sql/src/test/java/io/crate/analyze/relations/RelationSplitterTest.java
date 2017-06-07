@@ -35,12 +35,18 @@ import io.crate.testing.SqlExpressions;
 import io.crate.testing.T3;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static io.crate.testing.SymbolMatchers.isField;
 import static io.crate.testing.SymbolMatchers.isFunction;
 import static io.crate.testing.TestingHelpers.isSQL;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 
 public class RelationSplitterTest extends CrateUnitTest {
@@ -273,7 +279,7 @@ public class RelationSplitterTest extends CrateUnitTest {
     @Test
     public void testNoSplitOnOuterJoinRelation() throws Exception {
         QuerySpec querySpec = fromQuery("t2.y < 10");
-        JoinPair joinPair = new JoinPair(T3.T1, T3.T2, JoinType.LEFT, asSymbol("t1.a = t2.b"));
+        JoinPair joinPair = JoinPair.of(T3.T1, T3.T2, JoinType.LEFT, asSymbol("t1.a = t2.b"));
         RelationSplitter splitter = split(querySpec, Collections.singletonList(joinPair));
 
         assertThat(querySpec, isSQL("SELECT true WHERE (doc.t2.y < 10)"));
