@@ -112,6 +112,10 @@ public class SQLPlugin extends Plugin implements ActionPlugin, MapperPlugin, Clu
         settings.add(AuthenticationProvider.AUTH_HOST_BASED_CONFIG_SETTING.setting());
         settings.add(AuthenticationProvider.AUTH_TRUST_HTTP_DEFAULT_HEADER.setting());
 
+        // SSL settings
+        // TODO: move SSLConfigSettings class from ssl-impl to ssl
+        // and add them here: move code from SQLPLugin and remove SQLPlugin
+
         // also add CrateSettings
         for (CrateSetting crateSetting : CrateSettings.CRATE_CLUSTER_SETTINGS) {
             settings.add(crateSetting.setting());
