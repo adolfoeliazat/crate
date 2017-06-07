@@ -1,0 +1,9 @@
+apply from: "$rootDir/gradle/javaModule.gradle"
+
+archivesBaseName = 'ssl-impl'
+group = 'io.crate'
+description = 'SSL Encryption Implementation for CrateDB'
+
+dependencies {
+    compile project(':ssl')
+}

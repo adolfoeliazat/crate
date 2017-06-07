@@ -22,8 +22,11 @@
 
 package io.crate.protocols.postgres.ssl;
 
+import io.crate.settings.SharedSettings;
+import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
 public class SslHandlerProvider implements Supplier<SslReqHandler> {
@@ -31,7 +34,20 @@ public class SslHandlerProvider implements Supplier<SslReqHandler> {
     private final SslReqHandler sslReqHandler;
 
     public SslHandlerProvider(Settings settings) {
-        this.sslReqHandler = new SslReqRejectingHandler(settings);
+        if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
+            ClassLoader classLoader = getClass().getClassLoader();
+            try {
+                this.sslReqHandler = (SslReqHandler)
+                    classLoader
+                        .loadClass("io.crate.protocols.postgres.ssl.SslConfiguringHandler")
+                        .getConstructor(Setting.class)
+                        .newInstance(settings);
+            } catch (InstantiationException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
+            }
+        } else {
+            this.sslReqHandler = new SslReqRejectingHandler();
+        }
     }
 
     @Override

@@ -72,7 +72,7 @@ import static io.crate.protocols.postgres.FormatCodes.getFormatCode;
  *          |    SSLRequest                    |
  *          |--------------------------------->|
  *          |                                  |
- *          |     'S' | 'N' | error            |   (always N - ssl not supported)
+ *          |     'S' | 'N' | error            |   (supported in Enterprise version)
  *          |<---------------------------------|
  *
  *
