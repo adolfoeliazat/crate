@@ -50,7 +50,7 @@ public class SslReqRejectingHandler implements SslReqHandler {
         if (buffer.readInt() == 8 && buffer.readInt() == SSL_REQUEST_CODE) {
             // optional SSL negotiation pkg
             LOGGER.trace("Received SSL negotiation pkg");
-            SslHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'N');
+            SslReqHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'N');
             buffer.markReaderIndex();
         } else {
             buffer.resetReaderIndex();

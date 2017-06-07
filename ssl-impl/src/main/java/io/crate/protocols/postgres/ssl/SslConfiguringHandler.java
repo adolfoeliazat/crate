@@ -53,7 +53,7 @@ public class SslConfiguringHandler implements SslReqHandler {
         if (buffer.readInt() == 8 && buffer.readInt() == SSL_REQUEST_CODE) {
             LOGGER.trace("Received SSL negotiation pkg");
             buffer.markReaderIndex();
-            SslHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'S');
+            SslReqHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'S');
             try {
                 // add the ssl handler which must come first
                 pipeline.addFirst(buildSSLHandler(pipeline));

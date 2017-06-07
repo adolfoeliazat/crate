@@ -31,7 +31,7 @@ import io.crate.operation.auth.AuthenticationProvider;
 import io.crate.operation.auth.HbaProtocol;
 import io.crate.operation.collect.stats.JobsLogs;
 import io.crate.operation.user.User;
-import io.crate.protocols.postgres.ssl.SslHandlerUtils;
+import io.crate.protocols.postgres.ssl.SslReqHandlerUtils;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.testing.SQLExecutor;
 import io.netty.buffer.ByteBuf;
@@ -81,7 +81,7 @@ public class ConnectionContextTest extends CrateDummyClusterServiceUnitTest {
     public void testHandleEmptySimpleQuery() throws Exception {
         ConnectionContext ctx =
             new ConnectionContext(
-                SslHandlerUtils.getDefault(),
+                SslReqHandlerUtils.getDefault(),
                 mock(SQLOperations.class),
                 AuthenticationProvider.NOOP_AUTH);
         EmbeddedChannel channel = new EmbeddedChannel(ctx.decoder, ctx.handler);
@@ -112,7 +112,7 @@ public class ConnectionContextTest extends CrateDummyClusterServiceUnitTest {
         when(sqlOperations.createSession(any(SessionContext.class))).thenReturn(session);
         ConnectionContext ctx =
             new ConnectionContext(
-                SslHandlerUtils.getDefault(),
+                SslReqHandlerUtils.getDefault(),
                 sqlOperations,
                 new TestAuthentication(null));
         EmbeddedChannel channel = new EmbeddedChannel(ctx.decoder, ctx.handler);
@@ -132,7 +132,7 @@ public class ConnectionContextTest extends CrateDummyClusterServiceUnitTest {
     public void testBindMessageCanBeReadIfTypeForParamsIsUnknown() throws Exception {
         ConnectionContext ctx =
             new ConnectionContext(
-                SslHandlerUtils.getDefault(),
+                SslReqHandlerUtils.getDefault(),
                 sqlOperations,
                 new TestAuthentication(null));
         EmbeddedChannel channel = new EmbeddedChannel(ctx.decoder, ctx.handler);

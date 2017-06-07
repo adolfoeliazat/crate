@@ -1,4 +1,26 @@
-package io.crate.ssl;
+/*
+ * Licensed to Crate under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.  Crate licenses this file
+ * to you under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.  You may
+ * obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ *
+ * However, if you have executed another commercial license agreement
+ * with Crate these terms will supersede the license and you may use the
+ * software solely pursuant to the terms of the relevant commercial
+ * agreement.
+ */
+
+package io.crate.protocols.postgres.ssl;
 
 import io.crate.test.integration.CrateUnitTest;
 import org.elasticsearch.common.settings.Settings;
@@ -14,17 +36,17 @@ import java.security.UnrecoverableKeyException;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-public class SSLServiceTest extends CrateUnitTest {
+public class SslServiceTest extends CrateUnitTest {
 
     @Test
     public void testTrustStoreLoading() {
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SSLConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
                             getAbsoluteFilePathFromClassPath("truststore.jks"));
-        settingsBuilder.put(SSLConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "changeit");
 
         try {
-            SSLService.TrustStoreSettings trustStoreSettings = SSLService.loadTrustStore(settingsBuilder.build());
+            SslService.TrustStoreSettings trustStoreSettings = SslService.loadTrustStore(settingsBuilder.build());
             assertThat(trustStoreSettings.trustManagers.length, is(1));
             assertThat(trustStoreSettings.trustStore.getType(), is("jks"));
         } catch (Exception e) {
@@ -38,22 +60,22 @@ public class SSLServiceTest extends CrateUnitTest {
         expectedException.expectMessage("Keystore was tampered with, or password was incorrect");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SSLConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
                             getAbsoluteFilePathFromClassPath("truststore.jks"));
-        settingsBuilder.put(SSLConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
-        SSLService.loadTrustStore(settingsBuilder.build());
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
+        SslService.loadTrustStore(settingsBuilder.build());
     }
 
     @Test
     public void testKeyStoreLoading() {
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
                             getAbsoluteFilePathFromClassPath("keystore.jks"));
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
 
         try {
-            SSLService.KeyStoreSettings keyStoreSettings = SSLService.loadKeyStore(settingsBuilder.build());
+            SslService.KeyStoreSettings keyStoreSettings = SslService.loadKeyStore(settingsBuilder.build());
             assertThat(keyStoreSettings.keyManagers.length, is(1));
             assertThat(keyStoreSettings.keyStore.getType(), is("jks"));
             assertThat(keyStoreSettings.keyStore.getCertificate("root"), notNullValue());
@@ -68,12 +90,12 @@ public class SSLServiceTest extends CrateUnitTest {
         expectedException.expectMessage("Keystore was tampered with, or password was incorrect");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
                             getAbsoluteFilePathFromClassPath("keystore.jks"));
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
 
-        SSLService.loadKeyStore(settingsBuilder.build());
+        SslService.loadKeyStore(settingsBuilder.build());
     }
 
     @Test
@@ -82,17 +104,17 @@ public class SSLServiceTest extends CrateUnitTest {
         expectedException.expectMessage("Cannot recover key");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
                             getAbsoluteFilePathFromClassPath("keystore.jks"));
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
-        settingsBuilder.put(SSLConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
 
-        SSLService.loadKeyStore(settingsBuilder.build());
+        SslService.loadKeyStore(settingsBuilder.build());
     }
 
     private File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
         File file;
-        final URL fileUrl = SSLServiceTest.class.getClassLoader().getResource(fileNameFromClasspath);
+        final URL fileUrl = SslServiceTest.class.getClassLoader().getResource(fileNameFromClasspath);
         if (fileUrl != null) {
             try {
                 file = new File(URLDecoder.decode(fileUrl.getFile(), "UTF-8"));

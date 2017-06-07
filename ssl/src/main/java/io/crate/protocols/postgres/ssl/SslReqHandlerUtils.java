@@ -25,7 +25,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import org.elasticsearch.common.settings.Settings;
 
-public class SslHandlerUtils {
+public class SslReqHandlerUtils {
 
     public static SslReqHandler getDefault() {
         return new SslReqRejectingHandler(Settings.EMPTY);

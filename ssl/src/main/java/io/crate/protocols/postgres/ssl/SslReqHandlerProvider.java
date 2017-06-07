@@ -29,11 +29,11 @@ import org.elasticsearch.common.settings.Settings;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
-public class SslHandlerProvider implements Supplier<SslReqHandler> {
+public class SslReqHandlerProvider implements Supplier<SslReqHandler> {
 
     private final SslReqHandler sslReqHandler;
 
-    public SslHandlerProvider(Settings settings) {
+    public SslReqHandlerProvider(Settings settings) {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
             ClassLoader classLoader = getClass().getClassLoader();
             try {

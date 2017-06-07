@@ -1,28 +1,30 @@
 /*
- * This file is part of a module with proprietary Enterprise Features.
+ * Licensed to Crate under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.  Crate licenses this file
+ * to you under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.  You may
+ * obtain a copy of the License at
  *
- * Licensed to Crate.io Inc. ("Crate.io") under one or more contributor
- * license agreements.  See the NOTICE file distributed with this work for
- * additional information regarding copyright ownership.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unauthorized copying of this file, via any medium is strictly prohibited.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
  *
- * To use this file, Crate.io must have given you permission to enable and
- * use such Enterprise Features and you must have a valid Enterprise or
- * Subscription Agreement with Crate.io.  If you enable or use the Enterprise
- * Features, you represent and warrant that you have a valid Enterprise or
- * Subscription Agreement with Crate.io.  Your use of the Enterprise Features
- * if governed by the terms and conditions of your Enterprise or Subscription
- * Agreement with Crate.io.
+ * However, if you have executed another commercial license agreement
+ * with Crate these terms will supersede the license and you may use the
+ * software solely pursuant to the terms of the relevant commercial
+ * agreement.
  */
 
-package io.crate.ssl;
+package io.crate.protocols.postgres.ssl;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.handler.ssl.*;
 import org.elasticsearch.SpecialPermission;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.inject.Singleton;
 import org.elasticsearch.common.settings.Settings;
 
 import javax.net.ssl.*;
@@ -38,14 +40,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
-//TODO: remove @Singleton and @Inject and follow the pattern from UserServiceFactoryImpl
-@Singleton
-public class SSLService {
+public class SslService {
 
     private io.netty.handler.ssl.SslContext nettySslContext;
 
-    @Inject
-    public SSLService(Settings settings) throws Exception {
+    public SslService(Settings settings) throws Exception {
         TrustStoreSettings trustStoreSettings = loadTrustStore(settings);
         KeyStoreSettings keyStoreSettings = loadKeyStore(settings);
         String keyStorePassword = keyStoreSettings.keyStorePassword;
@@ -68,8 +67,8 @@ public class SSLService {
         List<String> supportedCiphers = Arrays.asList(sslContext.createSSLEngine().getSupportedCipherSuites());
 
 
-        final X509Certificate[] keystoreCert = SSLCertificateHelper.exportServerCertChain(keyStoreSettings.keyStore);
-        final PrivateKey keystoreKey = SSLCertificateHelper.exportDecryptedKey(
+        final X509Certificate[] keystoreCert = SslCertificateHelper.exportServerCertChain(keyStoreSettings.keyStore);
+        final PrivateKey keystoreKey = SslCertificateHelper.exportDecryptedKey(
             keyStoreSettings.keyStore,
             (keyStorePassword == null || keyStorePassword.isEmpty()) ? null : keyStoreKeyPassword.toCharArray());
 
@@ -78,7 +77,7 @@ public class SSLService {
         }
 
 
-        X509Certificate[] trustedCertificates = SSLCertificateHelper.exportRootCertificates(trustStoreSettings.trustStore);
+        X509Certificate[] trustedCertificates = SslCertificateHelper.exportRootCertificates(trustStoreSettings.trustStore);
         nettySslContext = buildSSLServerContext(keystoreKey,
                                                 keystoreCert,
                                                 trustedCertificates,
@@ -150,9 +149,9 @@ public class SSLService {
 
     @VisibleForTesting
     static TrustStoreSettings loadTrustStore(Settings settings) throws Exception {
-        String trustStorePath = SSLConfigSettings.SSL_TRUSTSTORE_FILEPATH.setting().get(settings);
+        String trustStorePath = SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.setting().get(settings);
         checkStorePath(trustStorePath);
-        String trustStorePassword = SSLConfigSettings.SSL_TRUSTSTORE_PASSWORD.setting().get(settings);
+        String trustStorePassword = SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.setting().get(settings);
 
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
@@ -186,10 +185,10 @@ public class SSLService {
     @VisibleForTesting
     static KeyStoreSettings loadKeyStore(Settings settings) throws Exception {
         /* Keystore */
-        String keyStorePath = SSLConfigSettings.SSL_KEYSTORE_FILEPATH.setting().get(settings);
+        String keyStorePath = SslConfigSettings.SSL_KEYSTORE_FILEPATH.setting().get(settings);
         checkStorePath(keyStorePath);
-        String keyStorePassword = SSLConfigSettings.SSL_KEYSTORE_PASSWORD.setting().get(settings);
-        String keyStoreKeyPassword = SSLConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.setting().get(settings);
+        String keyStorePassword = SslConfigSettings.SSL_KEYSTORE_PASSWORD.setting().get(settings);
+        String keyStoreKeyPassword = SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.setting().get(settings);
 
         // load the store
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
