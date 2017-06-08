@@ -27,15 +27,13 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
-import java.lang.reflect.InvocationTargetException;
-
 /**
  * Loads the appropriate implementation of the SslReqHandler.
  */
 public class SslReqHandlerSupplier {
 
     private static final Logger LOGGER = Loggers.getLogger(SslReqHandlerSupplier.class);
-    private static final String SSL_IMPL_CLASS = "io.crate.protocols.postgres.ssl.SslConfiguringHandler";
+    private static final String SSL_IMPL_CLASS = "io.crate.protocols.postgres.ssl.SslReqConfiguringHandler";
 
     private SslReqHandlerSupplier() {}
 
@@ -44,13 +42,15 @@ public class SslReqHandlerSupplier {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             try {
-                handler = (SslReqHandler)
-                    classLoader
-                        .loadClass(SSL_IMPL_CLASS)
-                        .getConstructor(Settings.class)
-                        .newInstance(settings);
-            } catch (InstantiationException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                LOGGER.info("Falling back to SslReqRejectingHandler because ssl-impl enterprise module is not available.");
+                handler = classLoader
+                    .loadClass(SSL_IMPL_CLASS)
+                    .asSubclass(SslReqHandler.class)
+                    .getDeclaredConstructor(Settings.class)
+                    .newInstance(settings);
+            } catch (ClassNotFoundException e) {
+                // We only ignore ClassNotFoundException when the ssl-impl module is not available.
+                // All other errors should be bugs.
+                LOGGER.info("SSL support disabled because ssl-impl enterprise module is not available.", e);
             } catch (Exception e) {
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
