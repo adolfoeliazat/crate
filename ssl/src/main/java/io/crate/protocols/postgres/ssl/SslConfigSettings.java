@@ -27,7 +27,7 @@ import io.crate.types.DataTypes;
 import org.elasticsearch.common.settings.Setting;
 
 /**
- * Settings
+ * Settings for configuring Postgres SSL. Only applicable to the ssl-impl module.
  */
 public class SslConfigSettings {
 
