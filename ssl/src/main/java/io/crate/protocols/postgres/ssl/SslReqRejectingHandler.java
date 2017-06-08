@@ -41,7 +41,7 @@ public class SslReqRejectingHandler implements SslReqHandler {
 
     @Override
     public State process(ByteBuf buffer, ChannelPipeline pipeline) {
-        if (buffer.readableBytes() < NUM_BYTES_REQUIRED) {
+        if (buffer.readableBytes() < SSL_REQUEST_BYTE_LENGTH) {
             return State.WAITING_FOR_INPUT;
         }
         // mark the buffer so we can jump back if we don't handle this startup
