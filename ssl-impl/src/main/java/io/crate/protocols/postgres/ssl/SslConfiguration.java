@@ -35,6 +35,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Builds a Netty {@link SSLContext} which is passed upon creation of a {@link SslHandler}
@@ -249,7 +250,7 @@ final class SslConfiguration {
 
         @Override
         public String toString() {
-            return this.name().toLowerCase();
+            return this.name().toLowerCase(Locale.ENGLISH);
         }
     }
 }
