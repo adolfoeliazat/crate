@@ -40,10 +40,6 @@ public class SslCertificateHelper {
 
         final List<X509Certificate> trustedCerts = new ArrayList<X509Certificate>();
 
-        if(LOGGER.isDebugEnabled()) {
-            LOGGER.debug("No alias given, will trust all of the certificates in the store");
-        }
-
         while (aliases.hasMoreElements()) {
             String _alias = aliases.nextElement();
 
