@@ -229,11 +229,11 @@ final class SslConfiguration {
     @VisibleForTesting
     static class KeyStoreSettings {
 
-        KeyStore keyStore;
-        KeyManager[] keyManagers;
-        String keyStorePassword;
-        String keyStoreKeyPassword;
-        String keyStorePath;
+        final KeyStore keyStore;
+        final KeyManager[] keyManagers;
+        final String keyStorePassword;
+        final String keyStoreKeyPassword;
+        final String keyStorePath;
 
         KeyStoreSettings(KeyStore keyStore,
                          KeyManager[] keyManagers,
