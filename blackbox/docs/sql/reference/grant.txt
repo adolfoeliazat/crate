@@ -11,25 +11,19 @@ Synopsis
 
 .. code-block:: psql
 
-  GRANT { { READ | WRITE [,...] } | ALL [ PRIVILEGES ] }
-  ON { [ TABLE ] table_name [, ...] | ALL TABLES IN SCHEMA schema_name [, ...] }
+  GRANT { { DQL | DML | DDL [,...] } | ALL [ PRIVILEGES ] }
   TO user_name [, ...];
 
 
 Description
 ===========
 
-``GRANT`` is a management statement to grant a ``READ`` and/or ``WRITE`` privilege
-on one or many tables, or all tables in a schema to one or many existing existing
-users.
+``GRANT`` is a management statement to grant a ``DQL``, ``DML`` or ``DDL``
+privilege on the cluster to one or many existing users.
 
 For usage of the ``GRANT`` statement see :ref:`administration-privileges`.
 
 Parameters
 ==========
-
-:table_name: The name of an existing table.
-
-:schema_name: The name of an existing schema.
 
 :user_name: The name of an existing user.

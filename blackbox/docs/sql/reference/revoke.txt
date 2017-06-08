@@ -11,25 +11,20 @@ Synopsis
 
 .. code-block:: psql
 
-  REVOKE { { READ | WRITE [,...] } | ALL [ PRIVILEGES ] }
-  ON { [ TABLE ] table_name [, ...] | ALL TABLES IN SCHEMA schema_name [, ...] }
+  REVOKE { { DQL | DML | DDL [,...] } | ALL [ PRIVILEGES ] }
   FROM user_name [, ...];
 
 
 Description
 ===========
 
-``REVOKE`` is a management statement to revoke a ``READ`` and/or ``WRITE`` privilege
-on one or many tables, or all tables in a schema from one or many existing existing
-users.
+``REVOKE`` is a management statement to revoke a previously granted
+``DQL``, ``DML`` or ``DDL`` privilege on the cluster from one or
+many existing users.
 
 For usage of the ``REVOKE`` statement see :ref:`administration-privileges`.
 
 Parameters
 ==========
-
-:table_name: The name of an existing table.
-
-:schema_name: The name of an existing schema.
 
 :user_name: The name of an existing user.
