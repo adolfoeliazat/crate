@@ -186,8 +186,8 @@ final class SslConfiguration {
     @VisibleForTesting
     static class TrustStoreSettings {
 
-        KeyStore trustStore;
-        TrustManager[] trustManagers;
+        final KeyStore trustStore;
+        final TrustManager[] trustManagers;
 
         TrustStoreSettings(KeyStore trustStore, TrustManager[] trustManagers) {
             this.trustStore = trustStore;
