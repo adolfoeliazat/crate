@@ -36,7 +36,7 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     private final Logger LOGGER;
     private final Settings settings;
 
-    SslReqConfiguringHandler(Settings settings) {
+    public SslReqConfiguringHandler(Settings settings) {
         this.LOGGER = Loggers.getLogger(SslReqRejectingHandler.class, settings);
         this.settings = settings;
         LOGGER.debug("SSL support is enabled.");

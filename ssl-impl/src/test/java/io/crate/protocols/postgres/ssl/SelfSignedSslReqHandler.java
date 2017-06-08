@@ -35,9 +35,9 @@ import java.security.cert.CertificateException;
 /**
  * SslRequestHandler which uses a simple (and insecure) self-signed certificate.
  */
-class SelfSignedSslReqHandler extends SslReqConfiguringHandler {
+public class SelfSignedSslReqHandler extends SslReqConfiguringHandler {
 
-    SelfSignedSslReqHandler(Settings settings) {
+    public SelfSignedSslReqHandler(Settings settings) {
         super(settings);
     }
 
