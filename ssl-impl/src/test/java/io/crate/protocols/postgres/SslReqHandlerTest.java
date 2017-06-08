@@ -21,7 +21,11 @@ package io.crate.protocols.postgres;
 import io.crate.action.sql.SQLOperations;
 import io.crate.operation.auth.AuthenticationProvider;
 import io.crate.protocols.postgres.ssl.SelfSignedSslReqHandler;
+import io.crate.protocols.postgres.ssl.SslReqConfiguringHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandler;
+import io.crate.protocols.postgres.ssl.SslReqHandlerSupplier;
+import io.crate.protocols.postgres.ssl.SslReqRejectingHandler;
+import io.crate.settings.SharedSettings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -66,6 +70,18 @@ public class SslReqHandlerTest {
 
         // ...and continue encrypted (ssl handler)
         assertTrue(channel.pipeline().first() instanceof SslHandler);
+    }
+
+    @Test
+    public void testClassLoading() {
+        Settings enterpriseDisabled = Settings.builder()
+            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), false)
+            .build();
+        assertTrue(SslReqHandlerSupplier.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
+        Settings enterpriseEnabled = Settings.builder()
+                .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), true)
+                .build();
+        assertTrue(SslReqHandlerSupplier.load(enterpriseEnabled) instanceof SslReqConfiguringHandler);
     }
 
 
