@@ -23,6 +23,8 @@
 package io.crate.protocols.postgres.ssl;
 
 import io.crate.settings.SharedSettings;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +32,10 @@ import java.util.function.Supplier;
 
 public class SslReqHandlerSupplier implements Supplier<SslReqHandler> {
 
-    private final SslReqHandler sslReqHandler;
+    private static final Logger LOGGER = Loggers.getLogger(SslReqHandlerSupplier.class);
+    private static final String SSL_IMPL_CLASS = "io.crate.protocols.postgres.ssl.SslConfiguringHandler";
+
+    private SslReqHandler sslReqHandler;
 
     public SslReqHandlerSupplier(Settings settings) {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
@@ -38,13 +43,16 @@ public class SslReqHandlerSupplier implements Supplier<SslReqHandler> {
             try {
                 this.sslReqHandler = (SslReqHandler)
                     classLoader
-                        .loadClass("io.crate.protocols.postgres.ssl.SslConfiguringHandler")
+                        .loadClass(SSL_IMPL_CLASS)
                         .getConstructor(Settings.class)
                         .newInstance(settings);
             } catch (InstantiationException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                LOGGER.info("Falling back to SslReqRejectingHandler because ssl-impl enterprise module is not available.");
+            } catch (Exception e) {
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
-        } else {
+        }
+        if (sslReqHandler == null) {
             this.sslReqHandler = new SslReqRejectingHandler(settings);
         }
     }
