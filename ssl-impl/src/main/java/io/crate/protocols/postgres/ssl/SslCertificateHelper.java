@@ -55,23 +55,13 @@ public class SslCertificateHelper {
         return trustedCerts.toArray(new X509Certificate[0]);
     }
 
-    private static List<String> toList(final Enumeration<String> enumeration) {
-        final List<String> aliases = new ArrayList<>();
-
-        while (enumeration.hasMoreElements()) {
-            aliases.add(enumeration.nextElement());
-        }
-
-        return Collections.unmodifiableList(aliases);
-    }
-
     public static X509Certificate[] exportServerCertChain(final KeyStore ks) throws KeyStoreException {
-        final List<String> aliases = toList(ks.aliases());
-        if (aliases.isEmpty()) {
+        final Enumeration<String> aliases = ks.aliases();
+        if (!aliases.hasMoreElements()) {
             String msg = "Keystore does not contain any aliases";
             throw new KeyStoreException(msg);
         }
-        String alias = aliases.get(0);
+        String alias = aliases.nextElement();
 
         final Certificate[] certs = ks.getCertificateChain(alias);
         if (certs != null && certs.length > 0) {
@@ -99,12 +89,12 @@ public class SslCertificateHelper {
     public static PrivateKey exportDecryptedKey(KeyStore ks, char[] password) throws KeyStoreException,
                                                                                      UnrecoverableKeyException,
                                                                                      NoSuchAlgorithmException {
-        List<String> aliases = toList(ks.aliases());
-        if (aliases.isEmpty()) {
+        Enumeration<String> aliases = ks.aliases();
+        if (!aliases.hasMoreElements()) {
             throw new KeyStoreException("No aliases found in keystore");
         }
 
-        String alias = aliases.get(0);
+        String alias = aliases.nextElement();
         final Key key = ks.getKey(alias, (password == null || password.length == 0) ? null:password);
 
         if (key == null) {
