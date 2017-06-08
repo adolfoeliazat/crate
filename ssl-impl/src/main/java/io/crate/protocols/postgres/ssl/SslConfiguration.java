@@ -166,7 +166,7 @@ final class SslConfiguration {
                                                                        NoSuchAlgorithmException,
                                                                        CertificateException {
         String trustStorePath = SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.setting().get(settings);
-        checkStorePath(trustStorePath, StoreType.trust);
+        checkStorePath(trustStorePath, StoreType.TRUST);
         String trustStorePassword = SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.setting().get(settings);
 
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -202,7 +202,7 @@ final class SslConfiguration {
                                                                    CertificateException,
                                                                    UnrecoverableKeyException {
         String keyStorePath = SslConfigSettings.SSL_KEYSTORE_FILEPATH.setting().get(settings);
-        checkStorePath(keyStorePath, StoreType.key);
+        checkStorePath(keyStorePath, StoreType.KEY);
         String keyStorePassword = SslConfigSettings.SSL_KEYSTORE_PASSWORD.setting().get(settings);
         String keyStoreKeyPassword = SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.setting().get(settings);
         if (keyStoreKeyPassword.isEmpty()) {
@@ -249,7 +249,12 @@ final class SslConfiguration {
     }
 
     private enum StoreType {
-        trust,
-        key
+        TRUST,
+        KEY;
+
+        @Override
+        public String toString() {
+            return this.name().toLowerCase();
+        }
     }
 }
