@@ -28,20 +28,23 @@ import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.function.Supplier;
 
-public class SslReqHandlerSupplier implements Supplier<SslReqHandler> {
+/**
+ * Loads the appropriate implementation of the SslReqHandler.
+ */
+public class SslReqHandlerSupplier {
 
     private static final Logger LOGGER = Loggers.getLogger(SslReqHandlerSupplier.class);
     private static final String SSL_IMPL_CLASS = "io.crate.protocols.postgres.ssl.SslConfiguringHandler";
 
-    private SslReqHandler sslReqHandler;
+    private SslReqHandlerSupplier() {}
 
-    public SslReqHandlerSupplier(Settings settings) {
+    public static SslReqHandler load(Settings settings) {
+        SslReqHandler handler = null;
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
-            ClassLoader classLoader = getClass().getClassLoader();
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             try {
-                this.sslReqHandler = (SslReqHandler)
+                handler = (SslReqHandler)
                     classLoader
                         .loadClass(SSL_IMPL_CLASS)
                         .getConstructor(Settings.class)
@@ -52,14 +55,9 @@ public class SslReqHandlerSupplier implements Supplier<SslReqHandler> {
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
         }
-        if (sslReqHandler == null) {
-            this.sslReqHandler = new SslReqRejectingHandler(settings);
+        if (handler == null) {
+            handler = new SslReqRejectingHandler(settings);
         }
+        return handler;
     }
-
-    @Override
-    public SslReqHandler get() {
-        return sslReqHandler;
-    }
-
 }

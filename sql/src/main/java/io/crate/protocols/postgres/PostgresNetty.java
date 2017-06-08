@@ -84,7 +84,6 @@ public class PostgresNetty extends AbstractLifecycleComponent {
 
     private final boolean enabled;
     private final String port;
-    private final SslReqHandlerSupplier sslReqHandlerSupplier;
     private final AuthenticationProvider authProvider;
     private final Logger namedLogger;
 
@@ -104,7 +103,6 @@ public class PostgresNetty extends AbstractLifecycleComponent {
         namedLogger = Loggers.getLogger("psql", settings);
         this.sqlOperations = sqlOperations;
         this.networkService = networkService;
-        this.sslReqHandlerSupplier = new SslReqHandlerSupplier(settings);
         this.authProvider = authProvider;
 
         enabled = PSQL_ENABLED_SETTING.setting().get(settings);
@@ -127,7 +125,7 @@ public class PostgresNetty extends AbstractLifecycleComponent {
             Netty4Transport.WORKER_COUNT.get(settings), daemonThreadFactory(settings, "postgres-netty-worker"));
         Authentication authentication = authProvider.get();
         Boolean reuseAddress = Netty4Transport.TCP_REUSE_ADDRESS.get(settings);
-        final SslReqHandler sslReqHandler = sslReqHandlerSupplier.get();
+        final SslReqHandler sslReqHandler = SslReqHandlerSupplier.load(settings);
         bootstrap = new ServerBootstrap()
             .channel(NioServerSocketChannel.class)
             .group(boss, worker)
