@@ -26,13 +26,16 @@ import io.crate.settings.CrateSetting;
 import io.crate.types.DataTypes;
 import org.elasticsearch.common.settings.Setting;
 
+/**
+ * Settings
+ */
 public class SslConfigSettings {
 
-    static final String SSL_TRUSTSTORE_FILEPATH_SETTING_NAME = "cage.ssl.truststore_filepath";
-    static final String SSL_TRUSTSTORE_PASSWORD_SETTING_NAME = "cage.ssl.truststore_password";
-    static final String SSL_KEYSTORE_FILEPATH_SETTING_NAME = "cage.ssl.keystore_path";
-    static final String SSL_KEYSTORE_PASSWORD_SETTING_NAME = "cage.ssl.keystore_password";
-    static final String SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME = "cage.ssl.keystore_key_password";
+    static final String SSL_TRUSTSTORE_FILEPATH_SETTING_NAME = "ssl.truststore_filepath";
+    static final String SSL_TRUSTSTORE_PASSWORD_SETTING_NAME = "ssl.truststore_password";
+    static final String SSL_KEYSTORE_FILEPATH_SETTING_NAME = "ssl.keystore_path";
+    static final String SSL_KEYSTORE_PASSWORD_SETTING_NAME = "ssl.keystore_password";
+    static final String SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME = "ssl.keystore_key_password";
 
     public static final CrateSetting<String> SSL_TRUSTSTORE_FILEPATH = CrateSetting.of(
         Setting.simpleString(SSL_TRUSTSTORE_FILEPATH_SETTING_NAME, Setting.Property.NodeScope),
