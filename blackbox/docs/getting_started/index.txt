@@ -5,6 +5,10 @@ Getting Started
 |
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    install/index
+   connect/index
+   import/index
+   clients/index
+   scale/index

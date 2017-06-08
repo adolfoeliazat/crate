@@ -31,3 +31,4 @@ Contents
    enterprise/index
    administration/index
    monitoring/index
+   tools/index
