@@ -69,7 +69,6 @@ public class SslCertificateHelper {
         final List<String> aliases = toList(ks.aliases());
         if (aliases.isEmpty()) {
             String msg = "Keystore does not contain any aliases";
-            LOGGER.error(msg);
             throw new KeyStoreException(msg);
         }
         String alias = aliases.get(0);
