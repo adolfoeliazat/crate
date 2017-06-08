@@ -24,7 +24,6 @@ package io.crate.protocols.postgres.ssl;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.handler.ssl.*;
-import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.common.settings.Settings;
 
 import javax.net.ssl.*;
