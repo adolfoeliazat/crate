@@ -8,12 +8,20 @@ Privileges
 .. note::
 
     Privileges are only part of the CrateDB `Enterprise Edition`_.
+    When the CrateDB Enterprise Edition is disabled, there will be
+    no user privileges checks, and every query will be executed.
+
+
+``Permission Types``
+====================
 
 When a user is created, he doesn't have any privileges. The superuser can then
-grant ``READ`` and ``WRITE`` privileges to this user.
+grant privileges to this user.
 
 Please note that only the superuser can ``GRANT`` and ``REVOKE`` privileges.
 The superuser bypasses all privileges and can access all tables in the cluster.
+
+
 
 
 ``GRANT``
