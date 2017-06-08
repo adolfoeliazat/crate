@@ -50,10 +50,10 @@ public interface SslReqHandler {
      * buffer read marker correctly such that successive readers
      * see the correct data. The handler is expected to position the
      * marker after the SSLRequest payload.
-     * @param pipeline The Netty pipeline which may be modified
      * @param buffer The buffer with incoming data
+     * @param pipeline The Netty pipeline which may be modified
      * @return The state of the handler
      */
-    State process(ChannelPipeline pipeline, ByteBuf buffer);
+    State process(ByteBuf buffer, ChannelPipeline pipeline);
 
 }
