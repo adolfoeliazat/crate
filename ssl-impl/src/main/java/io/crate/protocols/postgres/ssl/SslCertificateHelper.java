@@ -36,7 +36,7 @@ public class SslCertificateHelper {
     private static boolean stripRootFromChain = true; //TODO check
 
     public static X509Certificate[] exportRootCertificates(final KeyStore ks) throws KeyStoreException {
-        final List<String> aliases = toList(ks.aliases());
+        final Enumeration<String> aliases = ks.aliases();
 
         final List<X509Certificate> trustedCerts = new ArrayList<X509Certificate>();
 
@@ -44,7 +44,8 @@ public class SslCertificateHelper {
             LOGGER.debug("No alias given, will trust all of the certificates in the store");
         }
 
-        for (final String _alias : aliases) {
+        while (aliases.hasMoreElements()) {
+            String _alias = aliases.nextElement();
 
             if (ks.isCertificateEntry(_alias)) {
                 final X509Certificate cert = (X509Certificate) ks.getCertificate(_alias);
