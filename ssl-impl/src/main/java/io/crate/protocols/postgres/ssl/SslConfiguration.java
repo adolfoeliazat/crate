@@ -208,18 +208,18 @@ final class SslConfiguration {
             keyStoreKeyPassword = keyStorePassword;
         }
 
-        // load the store
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keyStore.load(new FileInputStream(new File(keyStorePath)),
-                      keyStorePassword.isEmpty() ? null : keyStorePassword.toCharArray());
+        try (FileInputStream is = new FileInputStream(new File(keyStorePath))) {
+            keyStore.load(
+                is,
+                keyStorePassword.isEmpty() ? null : keyStorePassword.toCharArray());
+        }
 
-        // initialize a key manager factory with the key store
         KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         keyFactory.init(
             keyStore,
             keyStoreKeyPassword.isEmpty() ? null : keyStoreKeyPassword.toCharArray());
 
-        // get the key managers from the factory
         KeyManager[] keyManagers = keyFactory.getKeyManagers();
 
         return new KeyStoreSettings(keyStore, keyManagers, keyStorePath, keyStorePassword, keyStoreKeyPassword);
