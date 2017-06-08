@@ -25,9 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
-import javax.net.ssl.SSLException;
-import java.security.cert.CertificateException;
-
 /**
  * Handler which configures SSL when it receives an SSLRequest.
  */
@@ -47,20 +44,17 @@ public class SslReqConfiguringHandler implements SslReqHandler {
         if (buffer.readableBytes() < SSL_REQUEST_BYTE_LENGTH) {
             return State.WAITING_FOR_INPUT;
         }
-        // mark the buffer so we can jump back if we don't handle this startup
+        // mark the buffer so we can jump back if we don't handle this message
         buffer.markReaderIndex();
         // reads the total message length (int) and the SSL request code (int)
         if (buffer.readInt() == 8 && buffer.readInt() == SSL_REQUEST_CODE) {
             LOGGER.trace("Received SSL negotiation pkg");
             buffer.markReaderIndex();
             SslReqHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'S');
-            try {
-                // add the ssl handler which must come first
-                pipeline.addFirst(buildSSLHandler(pipeline));
-            } catch (Exception e) {
-                throw new SslConfigurationException("Couldn't setup SSL.", e);
-            }
+            // add the ssl handler which must come first
+            pipeline.addFirst(buildSSLHandler(pipeline));
         } else {
+            // ssl message not available, reset the reader offset
             buffer.resetReaderIndex();
         }
         return State.DONE;
@@ -69,7 +63,7 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     /**
      * Constructs the Netty SslHandler which should be added as the first element of the pipeline.
      */
-    SslHandler buildSSLHandler(ChannelPipeline pipeline) throws SSLException, CertificateException {
+    SslHandler buildSSLHandler(ChannelPipeline pipeline) {
         return SslConfiguration.buildSslContext(settings).newHandler(pipeline.channel().alloc());
     }
 }

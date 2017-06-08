@@ -39,14 +39,18 @@ public class SelfSignedSslReqHandler extends SslReqConfiguringHandler {
     }
 
     @Override
-    SslHandler buildSSLHandler(ChannelPipeline pipeline) throws SSLException, CertificateException {
-        SelfSignedCertificate ssc = new SelfSignedCertificate();
-        SslContext sslContext =
-            SslContextBuilder
-                .forServer(ssc.certificate(), ssc.privateKey())
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .startTls(false)
-                .build();
-        return sslContext.newHandler(pipeline.channel().alloc());
+    SslHandler buildSSLHandler(ChannelPipeline pipeline) {
+        try {
+            SelfSignedCertificate ssc = new SelfSignedCertificate();
+            SslContext sslContext =
+                SslContextBuilder
+                    .forServer(ssc.certificate(), ssc.privateKey())
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .startTls(false)
+                    .build();
+            return sslContext.newHandler(pipeline.channel().alloc());
+        } catch (Exception e) {
+            throw new RuntimeException("Couldn't setup self signed certificate", e);
+        }
     }
 }
