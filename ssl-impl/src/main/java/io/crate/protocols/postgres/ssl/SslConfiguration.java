@@ -133,12 +133,6 @@ final class SslConfiguration {
 
     private static SslContext buildSSLContext(final SslContextBuilder sslContextBuilder) throws SSLException {
 
-        final SecurityManager sm = System.getSecurityManager();
-
-        if (sm != null) {
-            sm.checkPermission(new SpecialPermission());
-        }
-
         SslContext sslContext;
         try {
             sslContext = AccessController.doPrivileged(
