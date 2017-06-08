@@ -41,9 +41,25 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Builds a Netty {@link SSLContext} which is passed upon creation of a {@link SslHandler}
+ * which is responsible for establishing the SSL connection in a Netty pipeline.
+ *
+ * http://docs.oracle.com/javase/6/docs/technotes/guides/security/jsse/JSSERefGuide.html
+ *
+ * TrustManager:
+ * Determines whether the remote authentication credentials (and thus the connection) should be trusted.
+ * This is where your CA certificates usually go which determine whether to trust the remote.
+ *
+ * KeyManager:
+ * Determines which authentication credentials to send to the remote host.
+ * This is where your keys for the authenticating with the remote go.
+ *
+ * See also {@link SslReqConfiguringHandler}
+ */
 final class SslConfiguration {
 
-    static io.netty.handler.ssl.SslContext buildSslContext(Settings settings) {
+    static SslContext buildSslContext(Settings settings) {
         try {
             TrustStoreSettings trustStoreSettings = loadTrustStore(settings);
             KeyStoreSettings keyStoreSettings = loadKeyStore(settings);
@@ -155,16 +171,13 @@ final class SslConfiguration {
 
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
-        // load the store
         trustStore.load(new FileInputStream(new File(trustStorePath)),
                         trustStorePassword.isEmpty() ? null : trustStorePassword.toCharArray());
 
-        // initialize a trust manager factory with the trusted store
         TrustManagerFactory trustFactory =
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustFactory.init(trustStore);
 
-        // get the trust managers from the factory
         TrustManager[] trustManagers = trustFactory.getTrustManagers();
 
         return new TrustStoreSettings(trustStore, trustManagers);
@@ -205,7 +218,7 @@ final class SslConfiguration {
         KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         keyFactory.init(
             keyStore,
-            keyStoreKeyPassword == null || keyStoreKeyPassword.isEmpty() ? null : keyStoreKeyPassword.toCharArray());
+            keyStoreKeyPassword.isEmpty() ? null : keyStoreKeyPassword.toCharArray());
 
         // get the key managers from the factory
         KeyManager[] keyManagers = keyFactory.getKeyManagers();
