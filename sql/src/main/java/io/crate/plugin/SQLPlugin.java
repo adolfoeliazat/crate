@@ -114,6 +114,7 @@ public class SQLPlugin extends Plugin implements ActionPlugin, MapperPlugin, Clu
         settings.add(AuthenticationProvider.AUTH_TRUST_HTTP_DEFAULT_HEADER.setting());
 
         // Settings for SSL (available only in the Enterprise version)
+        settings.add(SslConfigSettings.SSL_ENABLED.setting());
         settings.add(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.setting());
         settings.add(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.setting());
         settings.add(SslConfigSettings.SSL_KEYSTORE_FILEPATH.setting());
