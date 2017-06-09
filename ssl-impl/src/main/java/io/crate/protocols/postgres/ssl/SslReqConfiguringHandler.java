@@ -44,7 +44,7 @@ public class SslReqConfiguringHandler implements SslReqHandler {
         this.LOGGER = Loggers.getLogger(SslReqRejectingHandler.class, settings);
         this.sslContext = sslContextSupplier.get();
         assert this.sslContext != null;
-        LOGGER.debug("SSL support is enabled.");
+        LOGGER.info("SSL support is enabled.");
     }
 
     @Override

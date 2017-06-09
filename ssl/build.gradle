@@ -7,5 +7,4 @@ description = 'SSL Encryption for CrateDB'
 dependencies {
     compile project(':core')
     compile "io.netty:netty-handler:${versions.netty4}"
-
 }

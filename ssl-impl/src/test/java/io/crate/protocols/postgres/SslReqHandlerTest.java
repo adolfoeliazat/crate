@@ -37,8 +37,11 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.elasticsearch.common.settings.Settings;
 import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.function.Supplier;
 
 import static io.crate.protocols.postgres.ssl.SslConfigurationTest.getAbsoluteFilePathFromClassPath;
@@ -49,7 +52,16 @@ import static org.mockito.Mockito.mock;
 
 public class SslReqHandlerTest {
 
+    private static File trustStoreFile;
+    private static File keyStoreFile;
+
     private EmbeddedChannel channel;
+
+    @BeforeClass
+    public static void beforeTests() throws IOException {
+        trustStoreFile = getAbsoluteFilePathFromClassPath("truststore.jks");
+        keyStoreFile = getAbsoluteFilePathFromClassPath("keystore.jks");
+    }
 
     @After
     public void dispose() {
@@ -123,9 +135,9 @@ public class SslReqHandlerTest {
         Settings enterpriseEnabled = Settings.builder()
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
             .put(SslConfigSettings.SSL_ENABLED.getKey(), true)
-            .put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("truststore.jks"))
+            .put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.getKey(), trustStoreFile)
             .put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.getKey(), "changeit")
-            .put(SslConfigSettings.SSL_KEYSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("keystore.jks"))
+            .put(SslConfigSettings.SSL_KEYSTORE_FILEPATH.getKey(), keyStoreFile)
             .put(SslConfigSettings.SSL_KEYSTORE_PASSWORD.getKey(), "changeit")
             .put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.getKey(), "changeit")
             .build();

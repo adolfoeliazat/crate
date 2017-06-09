@@ -20,9 +20,11 @@ package io.crate.protocols.postgres.ssl;
 
 import io.crate.test.integration.CrateUnitTest;
 import org.elasticsearch.common.settings.Settings;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -34,11 +36,21 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class SslConfigurationTest extends CrateUnitTest {
 
+    private static File trustStoreFile;
+    private static File keyStoreFile;
+    private static File keyStoreFileNoKeyPassword;
+
+    @BeforeClass
+    public static void beforeTests() throws IOException {
+        trustStoreFile = getAbsoluteFilePathFromClassPath("truststore.jks");
+        keyStoreFile = getAbsoluteFilePathFromClassPath("keystore.jks");
+        keyStoreFileNoKeyPassword = getAbsoluteFilePathFromClassPath("keystore_no_keypasswd.jks");
+    }
+
     @Test
-    public void testTrustStoreLoading() {
+    public void testTrustStoreLoading() throws IOException {
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("truststore.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME, trustStoreFile);
         settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "changeit");
 
         try {
@@ -56,17 +68,15 @@ public class SslConfigurationTest extends CrateUnitTest {
         expectedException.expectMessage("Keystore was tampered with, or password was incorrect");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("truststore.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH_SETTING_NAME, trustStoreFile);
         settingsBuilder.put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
         SslConfiguration.loadTrustStore(settingsBuilder.build());
     }
 
     @Test
-    public void testKeyStoreLoading() {
+    public void testKeyStoreLoading() throws IOException {
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("keystore.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME, keyStoreFile);
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
 
@@ -86,8 +96,7 @@ public class SslConfigurationTest extends CrateUnitTest {
         expectedException.expectMessage("Keystore was tampered with, or password was incorrect");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("keystore.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME, keyStoreFile);
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "wrongpassword");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "changeit");
 
@@ -100,8 +109,7 @@ public class SslConfigurationTest extends CrateUnitTest {
         expectedException.expectMessage("Cannot recover key");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("keystore.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME, keyStoreFile);
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
 
@@ -110,10 +118,9 @@ public class SslConfigurationTest extends CrateUnitTest {
     }
 
     @Test
-    public void testKeyStoreLoadingNoKeyPassword() {
+    public void testKeyStoreLoadingNoKeyPassword() throws IOException {
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("keystore_no_keypasswd.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME, keyStoreFileNoKeyPassword);
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
 
         try {
@@ -132,8 +139,7 @@ public class SslConfigurationTest extends CrateUnitTest {
         expectedException.expectMessage("Cannot recover key");
 
         Settings.Builder settingsBuilder = Settings.builder();
-        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME,
-                            getAbsoluteFilePathFromClassPath("keystore_no_keypasswd.jks"));
+        settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_FILEPATH_SETTING_NAME, keyStoreFileNoKeyPassword);
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
 
@@ -141,20 +147,11 @@ public class SslConfigurationTest extends CrateUnitTest {
         SslCertificateHelper.exportDecryptedKey(ks.keyStore, ks.keyStoreKeyPassword.toCharArray());
     }
 
-    public static File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
-        File file;
+    public static File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) throws IOException {
         final URL fileUrl = SslConfigurationTest.class.getClassLoader().getResource(fileNameFromClasspath);
-        if (fileUrl != null) {
-            try {
-                file = new File(URLDecoder.decode(fileUrl.getFile(), "UTF-8"));
-            } catch (final UnsupportedEncodingException e) {
-                return null;
-            }
-
-            if (file.exists() && file.canRead()) {
-                return file;
-            }
+        if (fileUrl == null) {
+            throw new FileNotFoundException("Resource was not found: " + fileNameFromClasspath);
         }
-        return null;
+        return new File(URLDecoder.decode(fileUrl.getFile(), "UTF-8"));
     }
 }
