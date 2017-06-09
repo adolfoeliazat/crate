@@ -13,12 +13,14 @@ Cluster Wide Privileges
     without the validation of privileges.
 
 
-User privileges are applied on the whole cluster. There is no option to ``GRANT``
-or ``REVOKE`` privileges on object level, such as table or schema.
+User privileges are applied on the whole cluster and propagated
+to all tables and schemas in the cluster. For example, a user with
+``DQL`` privilege can issue ``SELECT`` queries on any table and
+schema in the cluster. Similarly a user with ``DML`` privilege can
+issue ``INSERT`` statement to any table and schema in the cluster.
+There is no option to ``GRANT`` or ``REVOKE`` privileges on object
+level, such as table or schema.
 
-
-When a user is created, he doesn't have any privilege. The superuser can then
-grant privileges to this user.
 
 .. note::
 
