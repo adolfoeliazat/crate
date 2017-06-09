@@ -105,7 +105,8 @@ public class SslConfigurationTest extends CrateUnitTest {
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
 
-        SslConfiguration.loadKeyStore(settingsBuilder.build());
+        SslConfiguration.KeyStoreSettings ks = SslConfiguration.loadKeyStore(settingsBuilder.build());
+        SslCertificateHelper.exportDecryptedKey(ks.keyStore, ks.keyStoreKeyPassword.toCharArray());
     }
 
     @Test
@@ -121,7 +122,7 @@ public class SslConfigurationTest extends CrateUnitTest {
             assertThat(keyStoreSettings.keyStore.getType(), is("jks"));
             assertThat(keyStoreSettings.keyStore.getCertificate("root"), notNullValue());
         } catch (Exception e) {
-            fail("Failed to load trustore");
+            fail();
         }
     }
 
@@ -136,7 +137,8 @@ public class SslConfigurationTest extends CrateUnitTest {
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_PASSWORD_SETTING_NAME, "changeit");
         settingsBuilder.put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME, "wrongpassword");
 
-        SslConfiguration.loadKeyStore(settingsBuilder.build());
+        SslConfiguration.KeyStoreSettings ks = SslConfiguration.loadKeyStore(settingsBuilder.build());
+        SslCertificateHelper.exportDecryptedKey(ks.keyStore, ks.keyStoreKeyPassword.toCharArray());
     }
 
     public static File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {

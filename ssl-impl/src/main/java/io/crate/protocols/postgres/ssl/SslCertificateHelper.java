@@ -29,7 +29,6 @@ import java.util.*;
 public class SslCertificateHelper {
 
     private static final Logger LOGGER = Loggers.getLogger(SslCertificateHelper.class);
-    private static boolean stripRootFromChain = true; //TODO check
 
     public static X509Certificate[] exportRootCertificates(final KeyStore ks) throws KeyStoreException {
         final Enumeration<String> aliases = ks.aliases();
@@ -53,48 +52,37 @@ public class SslCertificateHelper {
 
     public static X509Certificate[] exportServerCertChain(final KeyStore ks) throws KeyStoreException {
         final Enumeration<String> aliases = ks.aliases();
-        if (!aliases.hasMoreElements()) {
-            String msg = "Keystore does not contain any aliases";
-            throw new KeyStoreException(msg);
-        }
-        String alias = aliases.nextElement();
 
-        final Certificate[] certs = ks.getCertificateChain(alias);
-        if (certs != null && certs.length > 0) {
-            X509Certificate[] x509Certs = Arrays.copyOf(certs, certs.length, X509Certificate[].class);
-
-            final X509Certificate lastCertificate = x509Certs[x509Certs.length - 1];
-
-            if (lastCertificate.getBasicConstraints() > -1
-                && lastCertificate.getSubjectX500Principal().equals(lastCertificate.getIssuerX500Principal())) {
-                LOGGER.warn("Certificate chain for alias {} contains a root certificate", alias);
-
-                if(stripRootFromChain ) {
-                    x509Certs = Arrays.copyOf(certs, certs.length-1, X509Certificate[].class);
-                }
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            Certificate[] certs = ks.getCertificateChain(alias);
+            if (certs != null && certs.length > 0) {
+                return Arrays.copyOf(certs, certs.length, X509Certificate[].class);
             }
-
-            return x509Certs;
-        } else {
-            LOGGER.error("Alias {} does not exists or does not contain a certificate chain", alias);
         }
 
         return new X509Certificate[0];
     }
 
-    public static PrivateKey exportDecryptedKey(KeyStore ks, char[] password) throws KeyStoreException,
-                                                                                     UnrecoverableKeyException,
-                                                                                     NoSuchAlgorithmException {
+    public static PrivateKey exportDecryptedKey(KeyStore ks, char[] password)
+            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException
+    {
         Enumeration<String> aliases = ks.aliases();
         if (!aliases.hasMoreElements()) {
             throw new KeyStoreException("No aliases found in keystore");
         }
 
-        String alias = aliases.nextElement();
-        final Key key = ks.getKey(alias, (password == null || password.length == 0) ? null:password);
+        Key key = null;
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            key = ks.getKey(alias, password);
+            if (key != null) {
+                break;
+            }
+        }
 
         if (key == null) {
-            throw new KeyStoreException("No key alias " + alias + " found");
+            throw new KeyStoreException("No key matching the password found in keystore");
         }
 
         if (key instanceof PrivateKey) {

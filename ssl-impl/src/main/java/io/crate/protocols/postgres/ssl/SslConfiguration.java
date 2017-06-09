@@ -62,18 +62,13 @@ final class SslConfiguration {
             String keyStorePassword = keyStoreSettings.keyStorePassword;
             String keyStoreKeyPassword = keyStoreSettings.keyStoreKeyPassword;
 
-            // initialize a trust manager factory with the trusted store
             KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyFactory.init(
                 keyStoreSettings.keyStore,
-                keyStoreKeyPassword == null || keyStoreKeyPassword.isEmpty() ?
-                null :
-                keyStoreKeyPassword.toCharArray());
+                keyStorePassword.toCharArray());
 
-            // get the trust managers from the factory
             KeyManager[] keyManagers = keyFactory.getKeyManagers();
 
-            // initialize an ssl context to use these managers and set as default
             SSLContext sslContext = SSLContext.getInstance("SSL");
             sslContext.init(keyManagers, trustStoreSettings.trustManagers, null);
             SSLContext.setDefault(sslContext);
@@ -83,7 +78,7 @@ final class SslConfiguration {
                 SslCertificateHelper.exportServerCertChain(keyStoreSettings.keyStore);
             final PrivateKey keystoreKey = SslCertificateHelper.exportDecryptedKey(
                 keyStoreSettings.keyStore,
-                (keyStorePassword == null || keyStorePassword.isEmpty()) ? null : keyStoreKeyPassword.toCharArray());
+                keyStoreKeyPassword.toCharArray());
 
             if (keystoreKey == null) {
                 throw new Exception("No key found in " + keyStoreSettings.keyStorePath);
@@ -201,21 +196,18 @@ final class SslConfiguration {
         checkStorePath(keyStorePath, StoreType.KEY);
         String keyStorePassword = SslConfigSettings.SSL_KEYSTORE_PASSWORD.setting().get(settings);
         String keyStoreKeyPassword = SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.setting().get(settings);
-        if (keyStoreKeyPassword.isEmpty()) {
-            keyStoreKeyPassword = keyStorePassword;
-        }
 
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         try (FileInputStream is = new FileInputStream(new File(keyStorePath))) {
             keyStore.load(
                 is,
-                keyStorePassword.isEmpty() ? null : keyStorePassword.toCharArray());
+                keyStorePassword.toCharArray());
         }
 
         KeyManagerFactory keyFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         keyFactory.init(
             keyStore,
-            keyStoreKeyPassword.isEmpty() ? null : keyStoreKeyPassword.toCharArray());
+            keyStorePassword.toCharArray());
 
         KeyManager[] keyManagers = keyFactory.getKeyManagers();
 
@@ -233,14 +225,14 @@ final class SslConfiguration {
 
         KeyStoreSettings(KeyStore keyStore,
                          KeyManager[] keyManagers,
+                         String keyStorePath,
                          String keyStorePassword,
-                         String keyStoreKeyPassword,
-                         String keyStorePath) {
+                         String keyStoreKeyPassword) {
             this.keyStore = keyStore;
             this.keyManagers = keyManagers;
+            this.keyStorePath = keyStorePath;
             this.keyStorePassword = keyStorePassword;
             this.keyStoreKeyPassword = keyStoreKeyPassword;
-            this.keyStorePath = keyStorePath;
         }
     }
 
