@@ -30,34 +30,30 @@ import org.elasticsearch.common.settings.Settings;
 /**
  * Loads the appropriate implementation of the SslReqHandler.
  */
-public class SslReqHandlerSupplier {
+public class SslReqHandlerLoader {
 
-    private static final Logger LOGGER = Loggers.getLogger(SslReqHandlerSupplier.class);
+    private static final Logger LOGGER = Loggers.getLogger(SslReqHandlerLoader.class);
     private static final String SSL_IMPL_CLASS = "io.crate.protocols.postgres.ssl.SslReqConfiguringHandler";
 
-    private SslReqHandlerSupplier() {}
+    private SslReqHandlerLoader() {}
 
     public static SslReqHandler load(Settings settings) {
-        SslReqHandler handler = null;
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             try {
-                handler = classLoader
+                return classLoader
                     .loadClass(SSL_IMPL_CLASS)
                     .asSubclass(SslReqHandler.class)
                     .getDeclaredConstructor(Settings.class)
                     .newInstance(settings);
             } catch (ClassNotFoundException e) {
                 // We only ignore ClassNotFoundException when the ssl-impl module is not available.
-                // All other errors should be bugs.
+                // All other errors should be bugs or configuration issues.
                 LOGGER.info("SSL support disabled because ssl-impl enterprise module is not available.", e);
             } catch (Exception e) {
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
         }
-        if (handler == null) {
-            handler = new SslReqRejectingHandler(settings);
-        }
-        return handler;
+        return new SslReqRejectingHandler(settings);
     }
 }

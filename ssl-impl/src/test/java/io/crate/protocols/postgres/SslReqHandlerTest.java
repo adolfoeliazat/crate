@@ -23,7 +23,7 @@ import io.crate.operation.auth.AuthenticationProvider;
 import io.crate.protocols.postgres.ssl.SelfSignedSslReqHandler;
 import io.crate.protocols.postgres.ssl.SslReqConfiguringHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandler;
-import io.crate.protocols.postgres.ssl.SslReqHandlerSupplier;
+import io.crate.protocols.postgres.ssl.SslReqHandlerLoader;
 import io.crate.protocols.postgres.ssl.SslReqRejectingHandler;
 import io.crate.settings.SharedSettings;
 import io.netty.buffer.ByteBuf;
@@ -77,11 +77,11 @@ public class SslReqHandlerTest {
         Settings enterpriseDisabled = Settings.builder()
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), false)
             .build();
-        assertTrue(SslReqHandlerSupplier.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
+        assertTrue(SslReqHandlerLoader.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
         Settings enterpriseEnabled = Settings.builder()
                 .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), true)
                 .build();
-        assertTrue(SslReqHandlerSupplier.load(enterpriseEnabled) instanceof SslReqConfiguringHandler);
+        assertTrue(SslReqHandlerLoader.load(enterpriseEnabled) instanceof SslReqConfiguringHandler);
     }
 
 
