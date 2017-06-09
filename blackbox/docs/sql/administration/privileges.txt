@@ -10,44 +10,47 @@ Cluster Wide Privileges
     Privileges are only part of the CrateDB `Enterprise Edition`_.
     When the CrateDB Enterprise Edition is disabled, there will be
     no user privilege checks, and every query will be executed
-    without the validation of permissions.
+    without the validation of privileges.
 
 
-``Permission Types``
+``Privilege Types``
 ====================
 
-When a user is created, he doesn't have any privileges. The superuser can then
+When a user is created, he doesn't have any privilege. The superuser can then
 grant privileges to this user.
 
-Please note that only the superuser can ``GRANT`` and ``REVOKE`` privileges.
-The superuser bypasses all privileges and can access all tables in the cluster.
-Therefor, It is also not possible to ``GRANT`` and ``REVOKE`` privileges to the
-superuser.
+.. note::
+    Note that only the superuser can manage privileges. This user has all
+    privileges and those cannot be managed.
 
-User permissions are applied on the whole cluster. There is no option to ``GRANT``
+User privileges are applied on the whole cluster. There is no option to ``GRANT``
 or ``REVOKE`` privileges on object level, such as table or schema.
 
 
 ``DQL``
 .......
 
-Granting ``Data Query Language (DQL)`` permission to a user, indicates that this
-user is allowed to execute ``SELECT`` and ``SHOW`` queries, as well as using
-the available user defined functions.
+Granting ``Data Query Language (DQL)`` privilege to a user, indicates that this
+user is allowed to execute ``SELECT``, ``SHOW`` and ``SET SESSION`` statements,
+as well as using the available user defined functions.
+
+.. note::
+    Note that only the superuser can execute ``SET GLOBAL`` statements.
 
 ``DML``
 .......
 
-Granting ``Data Manipulation Language (DML)`` permission to a user, indicates
+Granting ``Data Manipulation Language (DML)`` privilege to a user, indicates
 that this user is allowed to execute ``INSERT``, ``UPDATE`` and ``DELETE``
-queries. Users having ``DML`` permissions will still require ``DQL`` permission.
+statements. In practice any non trivial ``DML`` statement  will require
+``DQL`` privilege, for example ``INSERT FROM`` with a subquery.
 
 
 ``DDL``
 .......
 
-Granting ``Data Definition Language (DDL)`` permission to a user, indicates that
-this user is allowed to execute ``CREATE``, ``DROP`` and ``ALTER`` queries.
+Granting ``Data Definition Language (DDL)`` privilege to a user, indicates that
+this user is allowed to execute ``CREATE``, ``DROP`` and ``ALTER`` statements.
 
 
 ``GRANT``
@@ -75,13 +78,13 @@ statement returns an error::
     UserDoesNotExistException ...
 
 
-To grant ``ALL`` privileges to user will, we can use the following syntax::
+To grant ``ALL PRIVILEGES`` to user will, we can use the following syntax::
 
-    cr> GRANT ALL TO will;
+    cr> GRANT ALL PRIVILEGES TO will;
     GRANT OK, 2 rows affected (... sec)
 
-``ALL`` implies all the currently available privileges, namely ``DQL``, ``DML``
- and ``DDL``.
+``ALL PRIVILEGES`` implies all the currently available privileges,
+namely ``DQL``, ``DML`` and ``DDL``.
 
 Privileges can be granted to multiple users in the same statement, like so::
 
@@ -114,13 +117,13 @@ that were previously granted to a user, it can be used like this::
 List Privileges
 ===============
 
-CrateDB exposes privileges ``sys.permissions`` system table.
+CrateDB exposes privileges ``sys.privileges`` system table.
 Please note that this table can only be accessed by the superuser.
 
-By querying the ``sys.permissions`` table you can get all
+By querying the ``sys.privileges`` table you can get all
 information regarding the existing privileges. E.g.::
 
-    cr> SELECT * FROM sys.permissions;
+    cr> SELECT * FROM sys.privileges;
     +-------------+-----------+---------+------------+-------+-----------+
     | grantor     | grantee   | class   | state      | type  | ident     |
     +-------------+-----------+---------+------------+-------+-----------+
@@ -131,8 +134,8 @@ information regarding the existing privileges. E.g.::
 
 The column ``grantor`` shows the user who granted the privilege, the column ``grantee``
 shows the user for whom the privilege was granted. The column ``class`` identifies on which
-the permission exists ``ident`` stands for the ident of the object that the permission is
-set on and finally ``type`` stands for the type of privilege that was granted or revoked.
+the privilege exists ``ident`` stands for the ident of the object that the privilege is
+set on and finally ``type`` stands for the type of privileges that was granted or revoked.
 
 
 .. _Enterprise Edition: https://crate.io/enterprise/
