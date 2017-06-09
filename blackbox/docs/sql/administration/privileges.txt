@@ -13,8 +13,9 @@ Cluster Wide Privileges
     without the validation of privileges.
 
 
-``Privilege Types``
-====================
+User privileges are applied on the whole cluster. There is no option to ``GRANT``
+or ``REVOKE`` privileges on object level, such as table or schema.
+
 
 When a user is created, he doesn't have any privilege. The superuser can then
 grant privileges to this user.
@@ -26,12 +27,9 @@ grant privileges to this user.
     granted. Any statements which are not allowed with those privileges,
     such as ``GRANT`` and ``REVOKE``, can only be issued by a superuser.
 
-    At the moment, only the initial superuser ``crate`` is available, it is
-    not possible to create any other superusers, or manage their privileges.
 
-
-User privileges are applied on the whole cluster. There is no option to ``GRANT``
-or ``REVOKE`` privileges on object level, such as table or schema.
+``Privilege Types``
+====================
 
 ``DQL``
 .......
@@ -46,8 +44,7 @@ as well as using the available user defined functions.
 
 Granting ``Data Manipulation Language (DML)`` privilege to a user, indicates
 that this user is allowed to execute ``INSERT``, ``UPDATE`` and ``DELETE``
-statements. In practice any non trivial ``DML`` statement  will require
-``DQL`` privilege, for example ``INSERT FROM`` with a subquery.
+statements.
 
 
 ``DDL``
@@ -87,13 +84,13 @@ To grant ``ALL PRIVILEGES`` to user will, we can use the following syntax::
     cr> GRANT ALL PRIVILEGES TO will;
     GRANT OK, 2 rows affected (... sec)
 
-``ALL PRIVILEGES`` implies all the currently available privileges,
-namely ``DQL``, ``DML`` and ``DDL``.
+Using "ALL PRIVILEGES" is a shortcut to grant all the currently grantable
+privileges to a user, namely ``DQL``, ``DML`` and ``DDL``.
 
 Privileges can be granted to multiple users in the same statement, like so::
 
     cr> GRANT DDL TO wolfgang, will;
-    GRANT OK, 6 row affected (... sec)
+    GRANT OK, 2 row affected (... sec)
 
 
 ``REVOKE``
@@ -118,6 +115,12 @@ that were previously granted to a user, it can be used like this::
     REVOKE OK, 3 row affected (... sec)
 
 
+Privileges can be revoked from multiple users in the same statement,
+like so::
+
+    cr> REVOKE DDL FROM wolfgang, will;
+    REVOKE OK, 2 row affected (... sec)
+
 List Privileges
 ===============
 
@@ -139,9 +142,10 @@ information regarding the existing privileges. E.g.::
     SELECT 3 rows in set (... sec)
 
 The column ``grantor`` shows the user who granted the privilege, the column ``grantee``
-shows the user for whom the privilege was granted. The column ``class`` identifies on which
-the privilege exists ``ident`` stands for the ident of the object that the privilege is
-set on and finally ``type`` stands for the type of privileges that was granted or revoked.
+shows the user for whom the privilege was granted. The column ``class`` identifies on
+which type of context the privilege applies. ``ident`` stands for the ident of the object
+that the privilege is set on and finally ``type`` stands for the type of privileges that
+was granted or revoked.
 
 
 .. _Enterprise Edition: https://crate.io/enterprise/
