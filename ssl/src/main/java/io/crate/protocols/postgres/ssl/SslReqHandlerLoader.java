@@ -56,7 +56,10 @@ public class SslReqHandlerLoader {
                 // All other errors should be bugs or configuration issues.
                 LOGGER.info("SSL support disabled because ssl-impl enterprise module is not available.", e);
             } catch (Throwable e) {
-                // wraps the exception of dynamically loaded classes into an InvocationTargetException
+                // The JVM wraps the exception of dynamically loaded classes into an InvocationTargetException
+                // which we need to unpack first to see if we have an SslConfigurationException. If so, we
+                // throw this exception directly to the user. If not, we throw a general exception because there
+                // must be an issue with the loading of the ssl implementation which is not related to its settings.
                 if (e instanceof InvocationTargetException) {
                     Throwable cause = e.getCause();
                     if (cause instanceof SslConfigurationException) {
