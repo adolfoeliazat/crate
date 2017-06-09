@@ -85,10 +85,27 @@ public class SslReqHandlerTest {
 
     @Test
     public void testClassLoadingFallback() {
-        Settings enterpriseDisabled = Settings.builder()
-            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), false)
-            .build();
-        assertTrue(SslReqHandlerLoader.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
+        {
+            Settings settings = Settings.builder()
+                .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), false)
+                .put(SslConfigSettings.SSL_ENABLED.getKey(), true)
+                .build();
+            assertTrue(SslReqHandlerLoader.load(settings) instanceof SslReqRejectingHandler);
+        }
+        {
+            Settings settings = Settings.builder()
+                .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
+                .put(SslConfigSettings.SSL_ENABLED.getKey(), false)
+                .build();
+            assertTrue(SslReqHandlerLoader.load(settings) instanceof SslReqRejectingHandler);
+        }
+        {
+            Settings settings = Settings.builder()
+                .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), false)
+                .put(SslConfigSettings.SSL_ENABLED.getKey(), false)
+                .build();
+            assertTrue(SslReqHandlerLoader.load(settings) instanceof SslReqRejectingHandler);
+        }
     }
 
     @Test(expected = SslConfigurationException.class)
@@ -96,6 +113,7 @@ public class SslReqHandlerTest {
         // empty ssl configuration which is invalid
         Settings enterpriseEnabled = Settings.builder()
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
+            .put(SslConfigSettings.SSL_ENABLED.getKey(), true)
             .build();
         SslReqHandlerLoader.load(enterpriseEnabled);
     }
@@ -104,6 +122,7 @@ public class SslReqHandlerTest {
     public void testClassLoadingWithValidConfiguration() {
         Settings enterpriseEnabled = Settings.builder()
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
+            .put(SslConfigSettings.SSL_ENABLED.getKey(), true)
             .put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("truststore.jks"))
             .put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.getKey(), "changeit")
             .put(SslConfigSettings.SSL_KEYSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("keystore.jks"))

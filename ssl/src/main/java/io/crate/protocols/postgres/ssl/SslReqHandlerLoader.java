@@ -44,7 +44,9 @@ public class SslReqHandlerLoader {
      * @throws SslConfigurationException Exception thrown if the user has supplied an invalid configuration
      */
     public static SslReqHandler load(Settings settings) {
-        if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
+        boolean enterpriseEnabled = SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings);
+        boolean sslEnabled = SslConfigSettings.SSL_ENABLED.setting().get(settings);
+        if (enterpriseEnabled && sslEnabled) {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             try {
                 return classLoader

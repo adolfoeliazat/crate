@@ -25,17 +25,23 @@ package io.crate.protocols.postgres.ssl;
 import io.crate.settings.CrateSetting;
 import io.crate.types.DataTypes;
 import org.elasticsearch.common.settings.Setting;
+import org.elasticsearch.common.settings.Settings;
 
 /**
  * Settings for configuring Postgres SSL. Only applicable to the ssl-impl module.
  */
 public class SslConfigSettings {
 
+    static final String SSL_ENABLED_SETTING_NAME = "ssl.enabled";
     static final String SSL_TRUSTSTORE_FILEPATH_SETTING_NAME = "ssl.truststore_filepath";
     static final String SSL_TRUSTSTORE_PASSWORD_SETTING_NAME = "ssl.truststore_password";
     static final String SSL_KEYSTORE_FILEPATH_SETTING_NAME = "ssl.keystore_path";
     static final String SSL_KEYSTORE_PASSWORD_SETTING_NAME = "ssl.keystore_password";
     static final String SSL_KEYSTORE_KEY_PASSWORD_SETTING_NAME = "ssl.keystore_key_password";
+
+    public static final CrateSetting<Boolean> SSL_ENABLED = CrateSetting.of(
+        Setting.boolSetting(SSL_ENABLED_SETTING_NAME, false, Setting.Property.NodeScope),
+        DataTypes.BOOLEAN);
 
     public static final CrateSetting<String> SSL_TRUSTSTORE_FILEPATH = CrateSetting.of(
         Setting.simpleString(SSL_TRUSTSTORE_FILEPATH_SETTING_NAME, Setting.Property.NodeScope),
