@@ -27,6 +27,8 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * Loads the appropriate implementation of the SslReqHandler.
  */
@@ -50,7 +52,15 @@ public class SslReqHandlerLoader {
                 // We only ignore ClassNotFoundException when the ssl-impl module is not available.
                 // All other errors should be bugs or configuration issues.
                 LOGGER.info("SSL support disabled because ssl-impl enterprise module is not available.", e);
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                // wraps the exception of dynamically loaded classes into an InvocationTargetException
+                if (e instanceof InvocationTargetException) {
+                    Throwable cause = e.getCause();
+                    if (cause instanceof SslConfigurationException) {
+                        // report raw exception back to the user
+                        throw (SslConfigurationException) cause;
+                    }
+                }
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
         }

@@ -21,6 +21,7 @@ package io.crate.protocols.postgres;
 import io.crate.action.sql.SQLOperations;
 import io.crate.operation.auth.AuthenticationProvider;
 import io.crate.protocols.postgres.ssl.SelfSignedSslReqHandler;
+import io.crate.protocols.postgres.ssl.SslConfigurationException;
 import io.crate.protocols.postgres.ssl.SslReqConfiguringHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandlerLoader;
@@ -78,10 +79,15 @@ public class SslReqHandlerTest {
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), false)
             .build();
         assertTrue(SslReqHandlerLoader.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
+    }
+
+    @Test(expected = SslConfigurationException.class)
+    public void testClassLoadingWithInvalidConfiguration() {
+        // empty ssl configuration which is invalid
         Settings enterpriseEnabled = Settings.builder()
-                .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), true)
-                .build();
-        assertTrue(SslReqHandlerLoader.load(enterpriseEnabled) instanceof SslReqConfiguringHandler);
+            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
+            .build();
+        SslReqHandlerLoader.load(enterpriseEnabled);
     }
 
 
