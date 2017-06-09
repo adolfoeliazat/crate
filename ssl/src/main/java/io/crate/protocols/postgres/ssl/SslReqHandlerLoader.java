@@ -41,6 +41,7 @@ public class SslReqHandlerLoader {
 
     /**
      * Loads the SslRequest handler. Should only be called once per application life time.
+     * @throws SslConfigurationException Exception thrown if the user has supplied an invalid configuration
      */
     public static SslReqHandler load(Settings settings) {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
@@ -57,19 +58,20 @@ public class SslReqHandlerLoader {
                 LOGGER.info("SSL support disabled because ssl-impl enterprise module is not available.", e);
             } catch (Throwable e) {
                 // The JVM wraps the exception of dynamically loaded classes into an InvocationTargetException
-                // which we need to unpack first to see if we have an SslConfigurationException. If so, we
-                // throw this exception directly to the user. If not, we throw a general exception because there
-                // must be an issue with the loading of the ssl implementation which is not related to its settings.
-                if (e instanceof InvocationTargetException) {
-                    Throwable cause = e.getCause();
-                    if (cause instanceof SslConfigurationException) {
-                        // report raw exception back to the user
-                        throw (SslConfigurationException) cause;
-                    }
-                }
+                // which we need to unpack first to see if we have an SslConfigurationException.
+                tryUnwrapSslConfigurationException(e);
                 throw new RuntimeException("Loading SslConfiguringHandler failed although enterprise is enabled.", e);
             }
         }
         return new SslReqRejectingHandler(settings);
+    }
+
+    private static void tryUnwrapSslConfigurationException(Throwable e) {
+        if (e instanceof InvocationTargetException) {
+            Throwable cause = e.getCause();
+            if (cause instanceof SslConfigurationException) {
+                throw (SslConfigurationException) cause;
+            }
+        }
     }
 }
