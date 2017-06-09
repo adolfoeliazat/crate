@@ -20,7 +20,7 @@ package io.crate.protocols.postgres;
 
 import io.crate.action.sql.SQLOperations;
 import io.crate.operation.auth.AuthenticationProvider;
-import io.crate.protocols.postgres.ssl.SslConfigurationException;
+import io.crate.protocols.postgres.ssl.SslConfigSettings;
 import io.crate.protocols.postgres.ssl.SslConfigurationException;
 import io.crate.protocols.postgres.ssl.SslReqConfiguringHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandler;
@@ -41,6 +41,7 @@ import org.junit.Test;
 
 import java.util.function.Supplier;
 
+import static io.crate.protocols.postgres.ssl.SslConfigurationTest.getAbsoluteFilePathFromClassPath;
 import static io.netty.util.ReferenceCountUtil.releaseLater;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -90,7 +91,6 @@ public class SslReqHandlerTest {
         assertTrue(SslReqHandlerLoader.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
     }
 
-
     @Test(expected = SslConfigurationException.class)
     public void testClassLoadingWithInvalidConfiguration() {
         // empty ssl configuration which is invalid
@@ -98,6 +98,19 @@ public class SslReqHandlerTest {
             .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
             .build();
         SslReqHandlerLoader.load(enterpriseEnabled);
+    }
+
+    @Test
+    public void testClassLoadingWithValidConfiguration() {
+        Settings enterpriseEnabled = Settings.builder()
+            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), true)
+            .put(SslConfigSettings.SSL_TRUSTSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("truststore.jks"))
+            .put(SslConfigSettings.SSL_TRUSTSTORE_PASSWORD.getKey(), "changeit")
+            .put(SslConfigSettings.SSL_KEYSTORE_FILEPATH.getKey(), getAbsoluteFilePathFromClassPath("keystore.jks"))
+            .put(SslConfigSettings.SSL_KEYSTORE_PASSWORD.getKey(), "changeit")
+            .put(SslConfigSettings.SSL_KEYSTORE_KEY_PASSWORD.getKey(), "changeit")
+            .build();
+        assertTrue(SslReqHandlerLoader.load(enterpriseEnabled) instanceof SslReqConfiguringHandler);
     }
 
     private static void sendSslRequest(EmbeddedChannel channel) {
