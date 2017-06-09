@@ -139,7 +139,7 @@ public class SslConfigurationTest extends CrateUnitTest {
         SslConfiguration.loadKeyStore(settingsBuilder.build());
     }
 
-    private File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
+    public static File getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
         File file;
         final URL fileUrl = SslConfigurationTest.class.getClassLoader().getResource(fileNameFromClasspath);
         if (fileUrl != null) {

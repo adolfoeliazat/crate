@@ -39,6 +39,9 @@ public class SslReqHandlerLoader {
 
     private SslReqHandlerLoader() {}
 
+    /**
+     * Loads the SslRequest handler. Should only be called once per application life time.
+     */
     public static SslReqHandler load(Settings settings) {
         if (SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().get(settings)) {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();

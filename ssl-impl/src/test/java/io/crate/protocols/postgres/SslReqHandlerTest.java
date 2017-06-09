@@ -20,7 +20,7 @@ package io.crate.protocols.postgres;
 
 import io.crate.action.sql.SQLOperations;
 import io.crate.operation.auth.AuthenticationProvider;
-import io.crate.protocols.postgres.ssl.SelfSignedSslReqHandler;
+import io.crate.protocols.postgres.ssl.SslConfigurationException;
 import io.crate.protocols.postgres.ssl.SslConfigurationException;
 import io.crate.protocols.postgres.ssl.SslReqConfiguringHandler;
 import io.crate.protocols.postgres.ssl.SslReqHandler;
@@ -30,10 +30,16 @@ import io.crate.settings.SharedSettings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.elasticsearch.common.settings.Settings;
 import org.junit.After;
 import org.junit.Test;
+
+import java.util.function.Supplier;
 
 import static io.netty.util.ReferenceCountUtil.releaseLater;
 import static org.junit.Assert.assertEquals;
@@ -56,7 +62,10 @@ public class SslReqHandlerTest {
     public void testSslReqConfiguringHandler() {
         ConnectionContext ctx =
             new ConnectionContext(
-                new SelfSignedSslReqHandler(Settings.EMPTY),
+                new SslReqConfiguringHandler(
+                    Settings.EMPTY,
+                    // use a simple ssl context
+                    new SelfSignedSslContext()),
                 mock(SQLOperations.class),
                 AuthenticationProvider.NOOP_AUTH);
 
@@ -74,12 +83,13 @@ public class SslReqHandlerTest {
     }
 
     @Test
-    public void testClassLoading() {
+    public void testClassLoadingFallback() {
         Settings enterpriseDisabled = Settings.builder()
-            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.setting().getKey(), false)
+            .put(SharedSettings.ENTERPRISE_LICENSE_SETTING.getKey(), false)
             .build();
         assertTrue(SslReqHandlerLoader.load(enterpriseDisabled) instanceof SslReqRejectingHandler);
     }
+
 
     @Test(expected = SslConfigurationException.class)
     public void testClassLoadingWithInvalidConfiguration() {
@@ -90,11 +100,30 @@ public class SslReqHandlerTest {
         SslReqHandlerLoader.load(enterpriseEnabled);
     }
 
-
     private static void sendSslRequest(EmbeddedChannel channel) {
         ByteBuf buffer = releaseLater(Unpooled.buffer());
         buffer.writeInt(SslReqHandler.SSL_REQUEST_BYTE_LENGTH);
         buffer.writeInt(SslReqHandler.SSL_REQUEST_CODE);
         channel.writeInbound(buffer);
+    }
+
+    /**
+     * Uses a simple (and insecure) self-signed certificate.
+     */
+    public class SelfSignedSslContext implements Supplier<SslContext> {
+
+        @Override
+        public SslContext get() {
+            try {
+                SelfSignedCertificate ssc = new SelfSignedCertificate();
+                return SslContextBuilder
+                        .forServer(ssc.certificate(), ssc.privateKey())
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .startTls(false)
+                        .build();
+            } catch (Exception e) {
+                throw new RuntimeException("Couldn't setup self signed certificate", e);
+            }
+        }
     }
 }

@@ -32,6 +32,8 @@ import io.netty.channel.ChannelPipeline;
  * |       8        |      80877103      |  <- actual message
  *
  * https://www.postgresql.org/docs/current/static/protocol-flow.html#AEN113116
+ *
+ * The handler implementation should be state-less.
  */
 public interface SslReqHandler {
 

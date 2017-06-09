@@ -20,10 +20,13 @@ package io.crate.protocols.postgres.ssl;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
+
+import java.util.function.Supplier;
 
 /**
  * Handler which configures SSL when it receives an SSLRequest.
@@ -31,11 +34,16 @@ import org.elasticsearch.common.settings.Settings;
 public class SslReqConfiguringHandler implements SslReqHandler {
 
     private final Logger LOGGER;
-    private final Settings settings;
+    private final SslContext sslContext;
 
     public SslReqConfiguringHandler(Settings settings) {
+        this(settings, new DefaultSslContextSupplier(settings));
+    }
+
+    public SslReqConfiguringHandler(Settings settings, Supplier<SslContext> sslContextSupplier) {
         this.LOGGER = Loggers.getLogger(SslReqRejectingHandler.class, settings);
-        this.settings = settings;
+        this.sslContext = sslContextSupplier.get();
+        assert this.sslContext != null;
         LOGGER.debug("SSL support is enabled.");
     }
 
@@ -51,8 +59,9 @@ public class SslReqConfiguringHandler implements SslReqHandler {
             LOGGER.trace("Received SSL negotiation pkg");
             buffer.markReaderIndex();
             SslReqHandlerUtils.writeByteAndFlushMessage(pipeline.channel(), 'S');
-            // add the ssl handler which must come first
-            pipeline.addFirst(buildSSLHandler(pipeline));
+            // add the ssl handler which must come first in the pipeline
+            SslHandler sslHandler = sslContext.newHandler(pipeline.channel().alloc());
+            pipeline.addFirst(sslHandler);
         } else {
             // ssl message not available, reset the reader offset
             buffer.resetReaderIndex();
@@ -61,9 +70,19 @@ public class SslReqConfiguringHandler implements SslReqHandler {
     }
 
     /**
-     * Constructs the Netty SslHandler which should be added as the first element of the pipeline.
+     * Supplies the SslContext which is the factory for creating Netty SslHandlers.
      */
-    SslHandler buildSSLHandler(ChannelPipeline pipeline) {
-        return SslConfiguration.buildSslContext(settings).newHandler(pipeline.channel().alloc());
+    private static class DefaultSslContextSupplier implements Supplier<SslContext> {
+
+        private final SslContext sslContext;
+
+        private DefaultSslContextSupplier(Settings settings) {
+            this.sslContext = SslConfiguration.buildSslContext(settings);
+        }
+
+        @Override
+        public SslContext get() {
+            return sslContext;
+        }
     }
 }
