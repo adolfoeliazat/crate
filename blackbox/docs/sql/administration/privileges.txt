@@ -9,7 +9,7 @@ Cluster Wide Privileges
 
     Privileges are only part of the CrateDB `Enterprise Edition`_.
     When the CrateDB Enterprise Edition is disabled, there will be
-    no user privilege checks, and every query will be executed
+    no user privilege checks, and every statement will be executed
     without the validation of privileges.
 
 
@@ -20,12 +20,18 @@ When a user is created, he doesn't have any privilege. The superuser can then
 grant privileges to this user.
 
 .. note::
-    Note that only the superuser can manage privileges. This user has all
-    privileges and those cannot be managed.
+
+    Superusers are allowed to execute any statement without any privilege
+    checks. Currently only ``DQL``, ``DML`` and ``DDL`` privileges can be
+    granted. Any statements which are not allowed with those privileges,
+    such as ``GRANT`` and ``REVOKE``, can only be issued by a superuser.
+
+    At the moment, only the initial superuser ``crate`` is available, it is
+    not possible to create any other superusers, or manage their privileges.
+
 
 User privileges are applied on the whole cluster. There is no option to ``GRANT``
 or ``REVOKE`` privileges on object level, such as table or schema.
-
 
 ``DQL``
 .......
@@ -34,8 +40,6 @@ Granting ``Data Query Language (DQL)`` privilege to a user, indicates that this
 user is allowed to execute ``SELECT``, ``SHOW`` and ``SET SESSION`` statements,
 as well as using the available user defined functions.
 
-.. note::
-    Note that only the superuser can execute ``SET GLOBAL`` statements.
 
 ``DML``
 .......
@@ -118,7 +122,9 @@ List Privileges
 ===============
 
 CrateDB exposes privileges ``sys.privileges`` system table.
-Please note that this table can only be accessed by the superuser.
+
+.. note::
+    Please note that this table can only be accessed by the superuser.
 
 By querying the ``sys.privileges`` table you can get all
 information regarding the existing privileges. E.g.::
